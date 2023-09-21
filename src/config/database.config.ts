@@ -13,7 +13,13 @@ export class DatabaseConfiguration implements TypeOrmOptionsFactory {
       migrations: ["src/migrations/*.ts"],
       logging: true,
       synchronize: false,
-      migrationsTableName: 'migrations'
+      migrationsTableName: 'migrations',
+      ssl: true,
+      extra: {
+        ssl: {
+          rejectUnauthorized: false
+        }
+      }
     };
   }
 }

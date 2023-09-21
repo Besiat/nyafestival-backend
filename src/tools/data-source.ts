@@ -1,6 +1,5 @@
 import "reflect-metadata"
 import { DataSource } from "typeorm"
-import { ApplicationData } from "../entity/festival/application-data.entity";
 require('dotenv').config();
 
 export const AppDataSource = new DataSource({
@@ -15,4 +14,10 @@ export const AppDataSource = new DataSource({
     entities: ["src/entity/**/*.ts"],
     migrations: ["src/migrations/*.ts"],
     subscribers: [],
+    ssl:true,
+    extra: {
+        ssl:{
+            rejectUnauthorized: false
+        }
+    }
 })

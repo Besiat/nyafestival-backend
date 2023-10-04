@@ -14,6 +14,10 @@ export class PageService {
         return await this.pageRepository.get(id);
     }
 
+    async getPageByRoute(route: string) {
+        return await this.pageRepository.getByRoute(route);
+    }
+
     async createPage(pageData: Partial<Page>) {
         return await this.pageRepository.create(pageData);
     }

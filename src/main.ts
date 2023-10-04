@@ -11,10 +11,14 @@ async function bootstrap() {
     .setTitle('Nyafestival backend API')
     .setDescription('Nyafestival backend API description')
     .setVersion('1.0')
-    .addTag('cats')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  const swaggerOptions = {
+    customSiteTitle: 'Nyafestival API Documentation',
+    docExpansion: 'none', // Set this to 'none' to collapse all endpoints initially
+  };
+
+  SwaggerModule.setup('api', app, document, swaggerOptions);
   await app.listen(3000);
 }
 bootstrap();

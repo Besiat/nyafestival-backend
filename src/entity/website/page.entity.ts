@@ -8,6 +8,10 @@ export class Page {
     pageId: string;
 
     @Column()
+    @ApiProperty({ type: String, description: 'Title of the page' })
+    title: string;
+
+    @Column()
     @ApiProperty({ type: String, description: 'Route of the page' })
     route: string;
 

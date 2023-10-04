@@ -9,22 +9,22 @@ export class PagesController {
   constructor(private readonly pagesService: PageService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all pages' })
+  @ApiOperation({ operationId: 'findAll', summary: 'Get all pages' })
   @ApiResponse({ status: 200, description: 'Returns all pages', type: Page, isArray: true })
   async findAll(): Promise<Page[]> {
     return this.pagesService.getAllPages();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a page by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'Page ID' })
-  @ApiResponse({ status: 200, description: 'Returns a page by ID', type: Page })
-  async findOne(@Param('id') id: string): Promise<Page | undefined> {
-    return this.pagesService.getPageById(id);
+  @Get(':route')
+  @ApiOperation({ operationId: 'findOne', summary: 'Get a page by route' })
+  @ApiParam({ name: 'route', type: String, description: 'Page Route' })
+  @ApiResponse({ status: 200, description: 'Returns a page by route', type: Page })
+  async findOne(@Param('route') route: string): Promise<Page | undefined> {
+    return this.pagesService.getPageByRoute(route);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new page' })
+  @ApiOperation({ operationId: 'create', summary: 'Create a new page' })
   @ApiBody({ type: Page, description: 'Page data to create' })
   @ApiResponse({ status: 201, description: 'Creates a new page', type: Page })
   async create(@Body() pageData: Partial<Page>): Promise<Page> {
@@ -32,7 +32,7 @@ export class PagesController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a page by ID' })
+  @ApiOperation({ operationId: 'update', summary: 'Update a page by ID' })
   @ApiParam({ name: 'id', type: String, description: 'Page ID' })
   @ApiBody({ type: Page, description: 'Updated page data' })
   @ApiResponse({ status: 200, description: 'Updates a page by ID', type: Page })
@@ -41,7 +41,7 @@ export class PagesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a page by ID' })
+  @ApiOperation({ operationId: 'remove', summary: 'Delete a page by ID' })
   @ApiParam({ name: 'id', type: String, description: 'Page ID' })
   @ApiResponse({ status: 204, description: 'Deletes a page by ID' })
   async remove(@Param('id') id: string): Promise<void> {

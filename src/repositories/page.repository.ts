@@ -21,6 +21,14 @@ export class PageRepository {
         })
     }
 
+    async getByRoute(route: string): Promise<Page | undefined> {
+        return await this.pageRepository.findOne({
+            where: {
+                route
+            }
+        })
+    }
+
     async create(pageData: Partial<Page>): Promise<Page> {
         const page = this.pageRepository.create(pageData);
         return await this.pageRepository.save(page);

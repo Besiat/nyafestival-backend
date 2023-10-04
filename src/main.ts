@@ -6,6 +6,7 @@ dotenv.config({ path: './.env' });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   const config = new DocumentBuilder()
     .setTitle('Nyafestival backend API')
     .setDescription('Nyafestival backend API description')

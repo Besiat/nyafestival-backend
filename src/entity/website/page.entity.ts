@@ -7,7 +7,7 @@ export class Page {
     @ApiProperty({ type: String, description: 'Unique identifier for the page' })
     pageId: string;
 
-    @Column()
+    @Column({ default: '' }) // Set default value to an empty string
     @ApiProperty({ type: String, description: 'Title of the page' })
     title: string;
 
@@ -18,4 +18,8 @@ export class Page {
     @Column('text')
     @ApiProperty({ type: String, description: 'Content of the page' })
     content: string;
+
+    @Column({ type: 'int', nullable: true })
+    @ApiProperty({ type: Number, description: 'Order of the page in the list' })
+    order: number;
 }

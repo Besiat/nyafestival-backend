@@ -8,11 +8,11 @@ export class User {
     @PrimaryGeneratedColumn('uuid')
     userId: string;
 
-    @Column()
-    vkId: string;
+    @Column({ nullable: true })
+    vkId?: string;
 
-    @Column()
-    nickname: string;
+    @Column({ nullable: true })
+    nickname?: string;
 
     @Column()
     @IsEmail()
@@ -22,8 +22,8 @@ export class User {
     @IsNotEmpty()
     password: string;
 
-    @Column()
-    accessToken: string;
+    @Column({ nullable: true })
+    accessToken?: string;
 
     @Column('bool')
     isAdmin: boolean = false;

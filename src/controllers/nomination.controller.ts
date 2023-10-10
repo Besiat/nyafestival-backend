@@ -5,7 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/s
 import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
 
-@Controller('nominations')
+@Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
 export class NominationController {
     constructor(private readonly nominationService: NominationService) {}

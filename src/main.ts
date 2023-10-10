@@ -12,6 +12,7 @@ async function bootstrap() {
     .setDescription('Nyafestival backend API description')
     .setVersion('1.0')
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
   const swaggerOptions = {
     customSiteTitle: 'Nyafestival API Documentation',

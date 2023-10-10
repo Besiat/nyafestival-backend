@@ -4,7 +4,7 @@ import { Page } from '../entity/website/page.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
 
-@Controller('pages')
+@Controller('api/pages')
 @ApiTags('Pages') // Optional: Group your API under a tag
 export class PagesController {
   constructor(private readonly pagesService: PageService) {}

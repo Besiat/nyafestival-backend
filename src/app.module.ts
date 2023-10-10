@@ -18,6 +18,7 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { JwtStrategy } from './auth-strategies/jwt-strategy';
 
 
+
 @Module({
   imports: [
     JwtModule.register({

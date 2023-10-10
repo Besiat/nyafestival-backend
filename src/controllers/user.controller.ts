@@ -8,7 +8,7 @@ import { LoginDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @ApiTags('Authentication') // Add a tag for this controller
-@Controller('auth')
+@Controller('api/auth')
 export class UserController {
     constructor(
         private readonly authService: AuthService,

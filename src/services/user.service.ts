@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from '../entity/website/user';
 import { UserRepository } from '../repositories/user.repository';
 
@@ -15,6 +15,7 @@ export class UserService {
     }
 
     async findById(id: string): Promise<User | undefined> {
+        if (!id) throw new BadRequestException('Id is empty');
         return this.userRepository.findById(id);
     }
 

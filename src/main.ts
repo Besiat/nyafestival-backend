@@ -19,7 +19,7 @@ async function bootstrap() {
     docExpansion: 'none', // Set this to 'none' to collapse all endpoints initially
   };
 
-  SwaggerModule.setup('api', app, document, swaggerOptions);
+  //SwaggerModule.setup('api', app, document, swaggerOptions);
   await app.listen(3000);
 }
 bootstrap();

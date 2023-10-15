@@ -8,7 +8,7 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'John Doe' }) // Provide an example value for name
   @IsNotEmpty()
-  name: string;
+  username: string;
 
   @ApiProperty({ example: 'password123' }) // Provide an example value for password
   @IsNotEmpty()

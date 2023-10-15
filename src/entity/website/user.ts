@@ -11,15 +11,14 @@ export class User {
     @Column({ nullable: true })
     vkId?: string;
 
-    @Column({ nullable: true })
-    nickname?: string;
-
     @Column()
+    username: string;
+
+    @Column({nullable: true})
     @IsEmail()
     email: string;
 
-    @Column()
-    @IsNotEmpty()
+    @Column({nullable: true})
     password: string;
 
     @Column({ nullable: true })

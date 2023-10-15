@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from './user.service';
 import * as bcrypt from 'bcrypt';
@@ -17,16 +17,24 @@ export class AuthService {
         // Check if the user with the provided email already exists
         const existingUser = await this.userService.findByEmail(registerDto.email);
         if (existingUser) {
-            throw new UnauthorizedException('Email is already in use.');
+            throw new UnauthorizedException('Указанный Email уже используется');
         }
 
+        if (registerDto.password.length<6)
+        {
+            throw new BadRequestException('Email должен содержать хотя бы 6 символов');
+        }
+
+        if (!this.validateEmail(registerDto.email)){
+            throw new BadRequestException('Введён некорректный Email');
+        }
         // Hash the password before saving it to the database
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
         // Create the user in the database
         await this.userService.create({
             userId: randomUUID(),
-            nickname: '',
+            username: '',
             isAdmin: false,
             applications: [],
             ...registerDto,
@@ -37,27 +45,35 @@ export class AuthService {
     }
 
     async login(user: any) {
-        const payload = { sub: user.id, email: user.email }; // You can include additional user data in the payload
+        const payload = { userId: user.userId, username: user.username }; // You can include additional user data in the payload
         return {
             accessToken: this.jwtService.sign(payload),
         };
     }
 
-    async findOrCreateUserFromVk(profile: any, accessToken: string): Promise<User> {
-        const existingUser = await this.userService.findByVkId(profile.id);
-        
-        if (existingUser) {
-          // User already exists, update the access token if needed
-          existingUser.accessToken = accessToken;
-          return this.userService.update(existingUser);
-        } else {
-          // Create a new user based on VK data
-          const newUser = new User();
-          newUser.vkId = profile.id;
-          newUser.accessToken = accessToken;
-          // Set other user properties based on the VK profile
-    
-          return this.userService.create(newUser);
+    async findOrCreateUserFromVk(profile: any): Promise<User> {
+        if (!profile.uid) return null;
+        let existingUser = await this.userService.findByVkId(profile.uid);
+        if (!existingUser)
+        {
+            const newUser = new User();
+            newUser.vkId = profile.uid;
+            newUser.username = `${profile.first_name} ${profile.last_name}`
+            existingUser = await this.userService.create(newUser);
         }
-      }
+
+        // User already exists, update the access token if needed
+        const { accessToken } = await this.login(existingUser);
+        existingUser.accessToken = accessToken;
+        return this.userService.update(existingUser);
+    }
+
+    private validateEmail(email) {
+        return String(email)
+          .toLowerCase()
+          .match(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          );
+      };
 }
+

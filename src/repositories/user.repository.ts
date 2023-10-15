@@ -23,10 +23,12 @@ export class UserRepository {
     }
 
     async findById(id: string): Promise<User | undefined> {
+        if (!id) return;
         return await this.userRepository.findOne({ where: { userId: id } });
     }
 
     async findByVkId(id: string): Promise<User | undefined> {
+        if (!id) return;
         return await this.userRepository.findOne({ where: { vkId: id } });
     }
 

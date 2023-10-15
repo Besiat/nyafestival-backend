@@ -37,4 +37,15 @@ export class UserController {
         // The user object is available in req.user after successful authentication.
         return req.user;
     }
+
+    @Post('login-from-vk')
+    @ApiResponse({ status: 200, description: 'Login from VK successful', type: User })
+    async loginFromVk(@Body() vkProfile: any, @Request() req): Promise<{ accessToken: string }> {
+        // Use the findOrCreateUserFromVk function
+        const user = await this.authService.findOrCreateUserFromVk(vkProfile);
+
+        // Return the access token or any other response you need
+        return { accessToken: user.accessToken };
+    }
+
 }

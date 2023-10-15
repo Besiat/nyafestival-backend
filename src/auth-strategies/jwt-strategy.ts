@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
         // For example, you might want to check if the user exists in your database.
         // Replace this with your actual user lookup logic.
-        const user = this.userService.findByEmail(payload.email);
+        const user = this.userService.findById(payload.userId);
         if (!user) {
             throw new UnauthorizedException();
         }

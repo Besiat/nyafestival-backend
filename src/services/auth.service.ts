@@ -5,19 +5,21 @@ import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../dto/register.dto';
 import { randomUUID } from 'crypto';
 import { User } from '../entity/website/user';
+import { EmailService } from './email.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly userService: UserService,
         private readonly jwtService: JwtService,
+        private readonly emailService: EmailService
     ) { }
 
     async register(registerDto: RegisterDto): Promise<void> {
         // Check if the user with the provided email already exists
         const existingUser = await this.userService.findByEmail(registerDto.email);
         if (existingUser) {
-            throw new UnauthorizedException('Указанный Email уже используется');
+            throw new BadRequestException('Указанный Email уже используется');
         }
 
         if (registerDto.password.length<6)
@@ -30,6 +32,7 @@ export class AuthService {
         }
         // Hash the password before saving it to the database
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+        const emailConfirmationToken = randomUUID();
 
         // Create the user in the database
         await this.userService.create({
@@ -41,7 +44,11 @@ export class AuthService {
             vkId: null,
             accessToken: null,
             password: hashedPassword,
+            emailConfirmationToken,
+            confirmed: false
         });
+
+        this.emailService.sendConfirmationEmail(registerDto.email,emailConfirmationToken);
     }
 
     async login(user: any) {
@@ -58,7 +65,8 @@ export class AuthService {
         {
             const newUser = new User();
             newUser.vkId = profile.uid;
-            newUser.username = `${profile.first_name} ${profile.last_name}`
+            newUser.username = `${profile.first_name} ${profile.last_name}`;
+            newUser.confirmed = true;
             existingUser = await this.userService.create(newUser);
         }
 
@@ -66,6 +74,14 @@ export class AuthService {
         const { accessToken } = await this.login(existingUser);
         existingUser.accessToken = accessToken;
         return this.userService.update(existingUser);
+    }
+
+    async confirmEmail(confirmationCode: string) : Promise<void> {
+        if (!confirmationCode) throw new BadRequestException("Код подтверждения пуст");
+        const user = await this.userService.findByConfirmationCode(confirmationCode);
+        if (!user) throw new BadRequestException("Неверный код подтверждения");
+        user.confirmed = true;
+        await this.userService.update(user);
     }
 
     private validateEmail(email) {

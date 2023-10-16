@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe, UseGuards, Request, Get } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, UseGuards, Request, Get, Res } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'; // Import Swagger decorators
 import { User } from '../entity/website/user';
 import { AuthService } from '../services/auth.service';
@@ -48,4 +48,9 @@ export class UserController {
         return { accessToken: user.accessToken };
     }
 
+    @Post('confirm-email')
+    @ApiResponse({ status: 200, description: 'Email confirmed' })
+    async confirmEmail(@Body() body): Promise<void>{
+        await this.authService.confirmEmail(body?.confirmationCode);
+    }
 }

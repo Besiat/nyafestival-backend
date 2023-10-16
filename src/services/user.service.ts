@@ -23,6 +23,10 @@ export class UserService {
         return this.userRepository.findByVkId(id);
     }
 
+    async findByConfirmationCode(confirmationCode:string) : Promise<User | undefined> {
+        return this.userRepository.findByConfirmationCode(confirmationCode);
+    }
+
     async update(user:User): Promise<User> {
         return this.userRepository.update(user);
     }

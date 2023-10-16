@@ -16,6 +16,7 @@ import { AuthService } from './services/auth.service';
 import { UserRepository } from './repositories/user.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth-strategies/jwt-strategy';
+import { EmailService } from './services/email.service';
 
 
 
@@ -30,7 +31,7 @@ import { JwtStrategy } from './auth-strategies/jwt-strategy';
     }),
     TypeOrmModule.forFeature([Page, Nomination, User])],
   controllers: [PagesController, NominationController, UserController],
-  providers: [PageService, PageRepository, NominationService, NominationRepository, UserService, UserRepository, AuthService, JwtStrategy],
+  providers: [PageService, PageRepository, NominationService, NominationRepository, UserService, UserRepository, AuthService, JwtStrategy, EmailService],
 })
 export class AppModule {
 

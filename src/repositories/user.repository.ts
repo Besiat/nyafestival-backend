@@ -17,6 +17,14 @@ export class UserRepository {
         });
     }
 
+    async findByConfirmationCode(confirmationCode:string) : Promise<User | undefined> {
+        return await this.userRepository.findOne({
+            where: {
+                emailConfirmationToken: confirmationCode,
+            }
+        });
+    }
+
     async create(user: User): Promise<User> {
         const newUser = this.userRepository.create(user);
         return await this.userRepository.save(newUser);

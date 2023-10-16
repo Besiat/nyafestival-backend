@@ -3,12 +3,13 @@ import { PageService } from '../services/page.service';
 import { Page } from '../entity/website/page.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
+import * as nodemailer from 'nodemailer';
+import { EmailService } from '../services/email.service';
 
 @Controller('api/pages')
 @ApiTags('Pages') // Optional: Group your API under a tag
 export class PagesController {
-  constructor(private readonly pagesService: PageService) {}
-
+  constructor(private readonly pagesService: PageService, private readonly emailService: EmailService) { }
   @Get()
   @ApiOperation({ operationId: 'findAll', summary: 'Get all pages' })
   @ApiResponse({ status: 200, description: 'Returns all pages', type: Page, isArray: true })

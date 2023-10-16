@@ -30,4 +30,10 @@ export class User {
     @OneToMany(() => Application, (application) => application.user)
     applications: Application[];
 
+    @Column({nullable:true})
+    emailConfirmationToken?: string;
+
+    @Column('bool')
+    confirmed: boolean;
+
 }

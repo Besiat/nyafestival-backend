@@ -35,7 +35,7 @@ export class Field {
 
     @ApiProperty()
     @Column({nullable: true})
-    dependantOn?: string;
+    dependsOn?: string;
 
     @ApiProperty()
     @Column()

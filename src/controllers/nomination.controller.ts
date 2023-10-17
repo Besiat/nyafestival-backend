@@ -1,5 +1,5 @@
 // nomination.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
 import { NominationService } from '../services/nomination.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Nomination } from '../entity/festival/nomination.entity';
@@ -8,7 +8,7 @@ import { AdminGuard } from '../guards/admin-guard';
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
 export class NominationController {
-    constructor(private readonly nominationService: NominationService) {}
+    constructor(private readonly nominationService: NominationService) { }
 
     @Get()
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations' })
@@ -40,8 +40,8 @@ export class NominationController {
     @ApiBody({ type: Nomination, description: 'Updated nomination data' })
     @ApiResponse({ status: 200, description: 'Updates a nomination by ID', type: Nomination })
     @UseGuards(AdminGuard)
-    async update(@Param('id') id: string, @Body() nominationData: Partial<Nomination>): Promise<Nomination | undefined> {
-        return this.nominationService.updateNomination(id, nominationData);
+    async update(@Param('id') id: string, @Body() nomination: Nomination): Promise<Nomination | undefined> {
+        return this.nominationService.updateNomination(nomination);
     }
 
     @Delete(':id')
@@ -51,5 +51,43 @@ export class NominationController {
     @UseGuards(AdminGuard)
     async remove(@Param('id') id: string): Promise<void> {
         await this.nominationService.deleteNomination(id);
+    }
+
+    @Post(':nominationId/add-field/:fieldId')
+    @ApiOperation({ operationId: 'addFieldToNomination', summary: 'Add a field to a nomination' })
+    @ApiParam({ name: 'nominationId', type: String, description: 'Nomination ID' })
+    @ApiParam({ name: 'fieldId', type: String, description: 'Field ID' })
+    @ApiResponse({ status: 200, description: 'Adds a field to the nomination', type: Nomination })
+    @ApiResponse({ status: 404, description: 'Nomination or field not found' })
+    @UseGuards(AdminGuard)
+    async addFieldToNomination(
+        @Param('nominationId') nominationId: string,
+        @Param('fieldId') fieldId: string,
+    ): Promise<Nomination | undefined> {
+        try {
+            await this.nominationService.addFieldToNomination(nominationId, fieldId);
+            return this.nominationService.getNominationById(nominationId);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
+    @Delete(':nominationId/remove-field/:fieldId')
+    @ApiOperation({ operationId: 'removeFieldFromNomination', summary: 'Remove a field from a nomination' })
+    @ApiParam({ name: 'nominationId', type: String, description: 'Nomination ID' })
+    @ApiParam({ name: 'fieldId', type: String, description: 'Field ID' })
+    @ApiResponse({ status: 200, description: 'Removes a field from the nomination', type: Nomination })
+    @ApiResponse({ status: 404, description: 'Nomination or field not found' })
+    @UseGuards(AdminGuard)
+    async removeFieldFromNomination(
+        @Param('nominationId') nominationId: string,
+        @Param('fieldId') fieldId: string,
+    ): Promise<Nomination | undefined> {
+        try {
+            await this.nominationService.removeFieldFromNomination(nominationId, fieldId);
+            return this.nominationService.getNominationById(nominationId);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
     }
 }

@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { SubNomination } from "./subNomination.entity";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { SubNomination } from "./sub-nomination.entity";
+import { Field } from "./field.entity";
 
 @Entity()
 export class Nomination {
@@ -18,4 +19,8 @@ export class Nomination {
 
     @OneToMany(() => SubNomination, (subNomination) => subNomination.nomination)
     subNominations: SubNomination[];
+
+    @ManyToMany(() => Field, { cascade: true }) // Use cascade option to automatically save related fields
+    @JoinTable({name:'nomination_fields'})
+    fields: Field[];
 }

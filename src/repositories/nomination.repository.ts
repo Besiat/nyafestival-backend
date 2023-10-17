@@ -18,7 +18,8 @@ export class NominationRepository {
         return await this.nominationRepository.findOne({
             where: {
                 nominationId: id,
-            }
+            },
+            relations: ['fields']
         });
     }
 
@@ -27,9 +28,9 @@ export class NominationRepository {
         return await this.nominationRepository.save(nomination);
     }
 
-    async update(id: string, nominationData: Partial<Nomination>): Promise<Nomination | undefined> {
-        await this.nominationRepository.update(id, nominationData);
-        return this.get(id);
+    async update(nomination: Nomination): Promise<Nomination | undefined> {
+        await this.nominationRepository.save(nomination);
+        return this.get(nomination.nominationId);
     }
 
     async remove(id: string): Promise<void> {

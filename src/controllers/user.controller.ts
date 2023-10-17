@@ -24,7 +24,7 @@ export class UserController {
     @Post('login')
     @ApiResponse({ status: 200, description: 'Login successful', type: LoginDto }) // Define the response for Swagger
     async login(@Body(ValidationPipe) loginDto: LoginDto): Promise<{ accessToken: string }> {
-        const accessToken = await this.authService.login(loginDto);
+        const accessToken = await this.authService.loginUsingEmail(loginDto);
         return accessToken;
     }
 

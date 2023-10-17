@@ -17,6 +17,14 @@ import { UserRepository } from './repositories/user.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth-strategies/jwt-strategy';
 import { EmailService } from './services/email.service';
+import { FieldRepository } from './repositories/field.repository';
+import { FieldService } from './services/field.service';
+import { SubNominationRepository } from './repositories/sub-nomination.repository';
+import { SubNominationService } from './services/sub-nomination.service';
+import { SubNomination } from './entity/festival/sub-nomination.entity';
+import { Field } from './entity/festival/field.entity';
+import { FieldsController } from './controllers/field.controller';
+import { SubNominationController } from './controllers/sub-nomination.controller';
 
 
 
@@ -29,9 +37,28 @@ import { EmailService } from './services/email.service';
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfiguration, // Use your custom configuration class
     }),
-    TypeOrmModule.forFeature([Page, Nomination, User])],
-  controllers: [PagesController, NominationController, UserController],
-  providers: [PageService, PageRepository, NominationService, NominationRepository, UserService, UserRepository, AuthService, JwtStrategy, EmailService],
+    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field])],
+  controllers: [
+    PagesController,
+    NominationController,
+    UserController,
+    FieldsController,
+    SubNominationController
+  ],
+  providers: [
+    PageService,
+    PageRepository,
+    NominationService,
+    NominationRepository,
+    UserService,
+    UserRepository,
+    AuthService,
+    JwtStrategy,
+    EmailService,
+    FieldRepository,
+    FieldService,
+    SubNominationRepository,
+    SubNominationService],
 })
 export class AppModule {
 

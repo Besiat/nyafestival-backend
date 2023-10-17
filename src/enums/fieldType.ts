@@ -1,9 +1,7 @@
 export enum FieldType {
-    Line,
-    Text,
-    MusicFile,
-    ImageFile,
-    TextFile,
-    RadioButton,
-  }
-  
+  Text = 'text',
+  TextArea = 'textarea',
+  UploadImage = 'upload-image',
+  UploadMusic = 'upload-music',
+  Select = 'select'
+}

@@ -6,6 +6,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { randomUUID } from 'crypto';
 import { User } from '../entity/website/user';
 import { EmailService } from './email.service';
+import { LoginDto } from '../dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,12 +23,11 @@ export class AuthService {
             throw new BadRequestException('Указанный Email уже используется');
         }
 
-        if (registerDto.password.length<6)
-        {
+        if (registerDto.password.length < 6) {
             throw new BadRequestException('Email должен содержать хотя бы 6 символов');
         }
 
-        if (!this.validateEmail(registerDto.email)){
+        if (!this.validateEmail(registerDto.email)) {
             throw new BadRequestException('Введён некорректный Email');
         }
         // Hash the password before saving it to the database
@@ -48,7 +48,7 @@ export class AuthService {
             confirmed: false
         });
 
-        this.emailService.sendConfirmationEmail(registerDto.email,emailConfirmationToken);
+        this.emailService.sendConfirmationEmail(registerDto.email, emailConfirmationToken);
     }
 
     async login(user: any) {
@@ -58,11 +58,18 @@ export class AuthService {
         };
     }
 
+    async loginUsingEmail(loginDto: LoginDto): Promise<{ accessToken: string }> {
+        const user = await this.userService.findByEmail(loginDto.email);
+        if (!user) throw new BadRequestException("Пользователь не найден");
+        if (!bcrypt.compare(loginDto.password, user.password)) throw new BadRequestException("Неверный пароль");
+        if (!user.confirmed) throw new BadRequestException("Пожалуйста подтвердите Email");
+        return this.login(user);
+    }
+
     async findOrCreateUserFromVk(profile: any): Promise<User> {
         if (!profile.uid) return null;
         let existingUser = await this.userService.findByVkId(profile.uid);
-        if (!existingUser)
-        {
+        if (!existingUser) {
             const newUser = new User();
             newUser.vkId = profile.uid;
             newUser.username = `${profile.first_name} ${profile.last_name}`;
@@ -76,7 +83,7 @@ export class AuthService {
         return this.userService.update(existingUser);
     }
 
-    async confirmEmail(confirmationCode: string) : Promise<void> {
+    async confirmEmail(confirmationCode: string): Promise<void> {
         if (!confirmationCode) throw new BadRequestException("Код подтверждения пуст");
         const user = await this.userService.findByConfirmationCode(confirmationCode);
         if (!user) throw new BadRequestException("Неверный код подтверждения");
@@ -86,10 +93,10 @@ export class AuthService {
 
     private validateEmail(email) {
         return String(email)
-          .toLowerCase()
-          .match(
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-          );
-      };
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+    };
 }
 

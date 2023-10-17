@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
-import { SubNomination } from "./subNomination.entity";
+import { SubNomination } from "./sub-nomination.entity";
 import { User } from "../website/user";
 import { ApplicationData } from "./application-data.entity";
 

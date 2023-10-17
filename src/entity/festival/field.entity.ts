@@ -1,36 +1,47 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ApiProperty } from '@nestjs/swagger';
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { FieldType } from "../../enums/fieldType";
-import { SubNomination } from "./subNomination.entity";
+import { SubNomination } from "./sub-nomination.entity";
+import { FieldCategory } from "../../enums/fieldCategory";
 
 @Entity()
 export class Field {
     @PrimaryGeneratedColumn('uuid')
     fieldId: string;
 
+    @ApiProperty()
     @Column()
     label: string;
 
-    @Column()
-    hint: string;
+    @ApiProperty({ required: false })
+    @Column({ nullable: true })
+    subtitle: string;
 
-    @Column()
+    @ApiProperty({ required: false })
+    @Column({ nullable: true })
     code: string;
 
+    @ApiProperty()
     @Column({ default: false })
     required: boolean;
 
+    @ApiProperty({ enum: FieldType })
     @Column({ type: 'enum', enum: FieldType })
-    fieldType: FieldType;
+    type: FieldType;
 
-    @OneToMany(() => SubNomination, (subNomination) => subNomination.fields)
-    subNominations: SubNomination[];
+    @ApiProperty({ enum: FieldCategory })
+    @Column({ type: 'enum', enum: FieldCategory })
+    category: FieldCategory;
 
+    @ApiProperty()
+    @Column({nullable: true})
+    dependantOn?: string;
+
+    @ApiProperty()
     @Column()
     order: number;
 
+    @ApiProperty({ required: false })
     @Column({ nullable: true })
-    maxFileSize: number;
-
-    @Column({ nullable: true })
-    fileExtensions: string;
+    maxFileSize?: number;
 }

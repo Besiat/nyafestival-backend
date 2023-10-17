@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NominationRepository } from '../repositories/nomination.repository';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { FieldRepository } from '../repositories/field.repository'; // Import the FieldRepository
+import { SubNomination } from '../entity/festival/sub-nomination.entity';
 
 @Injectable()
 export class NominationService {
@@ -30,6 +31,11 @@ export class NominationService {
         await this.nominationRepository.remove(id);
     }
 
+    async getSubNominations(nominationId: string): Promise<SubNomination[]> {
+        const nomination = await this.getNominationById(nominationId);
+        return nomination.subNominations;
+    }
+    
     async addFieldToNomination(nominationId: string, fieldId: string) {
         const nomination = await this.nominationRepository.get(nominationId);
         if (!nomination) {
@@ -44,7 +50,7 @@ export class NominationService {
         if (nomination.fields.some(p => p.fieldId === fieldId)) {
             throw new Error('Nomination already contains this field');
         }
-        
+
         nomination.fields.push(field);
         await this.updateNomination(nomination);
     }

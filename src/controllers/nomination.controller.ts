@@ -4,6 +4,7 @@ import { NominationService } from '../services/nomination.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
+import { SubNomination } from '../entity/festival/sub-nomination.entity';
 
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
@@ -23,6 +24,14 @@ export class NominationController {
     @ApiResponse({ status: 200, description: 'Returns a nomination by ID', type: Nomination })
     async findOne(@Param('id') id: string): Promise<Nomination | undefined> {
         return this.nominationService.getNominationById(id);
+    }
+
+    @Get(':id/subNominations')
+    @ApiOperation({ operationId: 'getSubnominations', summary: 'Get subnominations' })
+    @ApiParam({ name: 'id', type: String, description: 'Nomination ID' })
+    @ApiResponse({ status: 200, description: 'Returns a nomination by ID', type: SubNomination, isArray: true })
+    async getSubNominations(@Param('id') id: string) {
+        return this.nominationService.getSubNominations(id);
     }
 
     @Post()

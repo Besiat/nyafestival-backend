@@ -9,7 +9,7 @@ export class Application {
   applicationId: string;
 
   @ManyToOne(() => SubNomination, (subNomination) => subNomination.applications)
-  @JoinColumn({ name: 'nominationId' })
+  @JoinColumn({ name: 'subNominationId' })
   subNomination: SubNomination;
 
   @Column()

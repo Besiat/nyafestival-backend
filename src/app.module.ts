@@ -25,11 +25,28 @@ import { SubNomination } from './entity/festival/sub-nomination.entity';
 import { Field } from './entity/festival/field.entity';
 import { FieldsController } from './controllers/field.controller';
 import { SubNominationController } from './controllers/sub-nomination.controller';
+import { MulterModule } from '@nestjs/platform-express';
+import { FileController } from './controllers/file.controller';
+import { FileService } from './services/file.service';
+import { ApplicationFile } from './entity/website/application-file.entity';
+import multer = require('multer');
+import dotenv = require('dotenv');
+import ShortUniqueId from 'short-unique-id';
 
-
+dotenv.config()
 
 @Module({
   imports: [
+    MulterModule.register({
+      storage: multer.diskStorage({
+        destination: `${process.env.UPLOAD_PATH}`,
+        filename: function (req, file, cb) {
+          var fileExt = file.originalname.split('.').pop();
+          const uid = new ShortUniqueId({ length: 10 }).rnd();
+          cb(null, `${uid}.${fileExt}`);
+        }
+      })
+    }),
     JwtModule.register({
       secret: `${process.env.TOKEN_SECRET}`,
       signOptions: { expiresIn: '1h' },
@@ -37,13 +54,14 @@ import { SubNominationController } from './controllers/sub-nomination.controller
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfiguration, // Use your custom configuration class
     }),
-    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field])],
+    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile])],
   controllers: [
     PagesController,
     NominationController,
     UserController,
     FieldsController,
-    SubNominationController
+    SubNominationController,
+    FileController
   ],
   providers: [
     PageService,
@@ -58,7 +76,8 @@ import { SubNominationController } from './controllers/sub-nomination.controller
     FieldRepository,
     FieldService,
     SubNominationRepository,
-    SubNominationService],
+    SubNominationService,
+    FileService],
 })
 export class AppModule {
 

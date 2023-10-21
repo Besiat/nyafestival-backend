@@ -23,7 +23,7 @@ export class FileController {
         return this.fileService.uploadFile(file, userId);
     }
 
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     @Delete(':id')
     async deleteFile(@Param('id') fileId: string, @Request() req) {
         const userId = req.user.id; // Get the user ID from the JWT token payload

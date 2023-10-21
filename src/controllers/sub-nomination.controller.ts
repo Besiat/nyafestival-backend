@@ -28,7 +28,7 @@ export class SubNominationController {
   @ApiOperation({ operationId: 'create', summary: 'Create a new sub-nomination' })
   @ApiBody({ type: SubNomination, description: 'SubNomination data to create' })
   @ApiResponse({ status: 201, description: 'Creates a new sub-nomination', type: SubNomination })
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async create(@Body() subNominationData: Partial<SubNomination>): Promise<SubNomination> {
     return this.subNominationService.createSubNomination(subNominationData);
   }
@@ -38,7 +38,7 @@ export class SubNominationController {
   @ApiParam({ name: 'id', type: String, description: 'SubNomination ID' })
   @ApiBody({ type: SubNomination, description: 'Updated sub-nomination data' })
   @ApiResponse({ status: 200, description: 'Updates a sub-nomination by ID', type: SubNomination })
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async update(@Param('id') id: string, @Body() subNominationData: Partial<SubNomination>): Promise<SubNomination | undefined> {
     return this.subNominationService.updateSubNomination(id, subNominationData);
   }
@@ -47,7 +47,7 @@ export class SubNominationController {
   @ApiOperation({ operationId: 'remove', summary: 'Delete a sub-nomination by ID' })
   @ApiParam({ name: 'id', type: String, description: 'SubNomination ID' })
   @ApiResponse({ status: 204, description: 'Deletes a sub-nomination by ID' })
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id') id: string): Promise<void> {
     await this.subNominationService.deleteSubNomination(id);
   }

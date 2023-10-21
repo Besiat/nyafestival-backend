@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/s
 import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
+import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
@@ -38,7 +39,7 @@ export class NominationController {
     @ApiOperation({ operationId: 'create', summary: 'Create a new nomination' })
     @ApiBody({ type: Nomination, description: 'Nomination data to create' })
     @ApiResponse({ status: 201, description: 'Creates a new nomination', type: Nomination })
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async create(@Body() nominationData: Partial<Nomination>): Promise<Nomination> {
         return this.nominationService.createNomination(nominationData);
     }
@@ -48,7 +49,7 @@ export class NominationController {
     @ApiParam({ name: 'id', type: String, description: 'Nomination ID' })
     @ApiBody({ type: Nomination, description: 'Updated nomination data' })
     @ApiResponse({ status: 200, description: 'Updates a nomination by ID', type: Nomination })
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async update(@Param('id') id: string, @Body() nomination: Nomination): Promise<Nomination | undefined> {
         return this.nominationService.updateNomination(nomination);
     }
@@ -57,7 +58,7 @@ export class NominationController {
     @ApiOperation({ operationId: 'remove', summary: 'Delete a nomination by ID' })
     @ApiParam({ name: 'id', type: String, description: 'Nomination ID' })
     @ApiResponse({ status: 204, description: 'Deletes a nomination by ID' })
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async remove(@Param('id') id: string): Promise<void> {
         await this.nominationService.deleteNomination(id);
     }
@@ -68,7 +69,7 @@ export class NominationController {
     @ApiParam({ name: 'fieldId', type: String, description: 'Field ID' })
     @ApiResponse({ status: 200, description: 'Adds a field to the nomination', type: Nomination })
     @ApiResponse({ status: 404, description: 'Nomination or field not found' })
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async addFieldToNomination(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,
@@ -87,7 +88,7 @@ export class NominationController {
     @ApiParam({ name: 'fieldId', type: String, description: 'Field ID' })
     @ApiResponse({ status: 200, description: 'Removes a field from the nomination', type: Nomination })
     @ApiResponse({ status: 404, description: 'Nomination or field not found' })
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async removeFieldFromNomination(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,

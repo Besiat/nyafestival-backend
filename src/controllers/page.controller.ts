@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/s
 import { AdminGuard } from '../guards/admin-guard';
 import * as nodemailer from 'nodemailer';
 import { EmailService } from '../services/email.service';
+import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/pages')
 @ApiTags('Pages') // Optional: Group your API under a tag
@@ -29,7 +30,7 @@ export class PagesController {
   @ApiOperation({ operationId: 'create', summary: 'Create a new page' })
   @ApiBody({ type: Page, description: 'Page data to create' })
   @ApiResponse({ status: 201, description: 'Creates a new page', type: Page })
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async create(@Body() pageData: Partial<Page>): Promise<Page> {
     return this.pagesService.createPage(pageData);
   }
@@ -39,7 +40,7 @@ export class PagesController {
   @ApiParam({ name: 'id', type: String, description: 'Page ID' })
   @ApiBody({ type: Page, description: 'Updated page data' })
   @ApiResponse({ status: 200, description: 'Updates a page by ID', type: Page })
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async update(@Param('id') id: string, @Body() pageData: Partial<Page>): Promise<Page | undefined> {
     return this.pagesService.updatePage(id, pageData);
   }
@@ -48,7 +49,7 @@ export class PagesController {
   @ApiOperation({ operationId: 'remove', summary: 'Delete a page by ID' })
   @ApiParam({ name: 'id', type: String, description: 'Page ID' })
   @ApiResponse({ status: 204, description: 'Deletes a page by ID' })
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id') id: string): Promise<void> {
     await this.pagesService.deletePage(id);
   }

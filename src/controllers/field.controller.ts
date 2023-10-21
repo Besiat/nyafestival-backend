@@ -3,10 +3,11 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/s
 import { FieldService } from '../services/field.service';
 import { Field } from '../entity/festival/field.entity';
 import { AdminGuard } from '../guards/admin-guard';
+import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/fields')
 @ApiTags('Fields')
-@UseGuards(AdminGuard)
+@UseGuards(JwtAuthGuard, AdminGuard)
 export class FieldsController {
   constructor(private readonly fieldService: FieldService) { }
 

@@ -72,7 +72,7 @@ export class AuthService {
         if (!existingUser) {
             const newUser = new User();
             newUser.vkId = profile.uid;
-            newUser.username = `${profile.first_name} ${profile.last_name}`;
+            newUser.username = `${profile.first_name}`;
             newUser.confirmed = true;
             existingUser = await this.userService.create(newUser);
         }

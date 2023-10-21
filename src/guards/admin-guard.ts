@@ -1,21 +1,20 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { JwtAuthGuard } from "./jwt-guard";
 
 @Injectable()
-export class AdminGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) { }
-
+export class AdminGuard extends JwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const isAdmin = this.reflector.get<boolean>('isAdmin', context.getHandler());
+    const isJwtAuthenticated = super.canActivate(context);
 
-    if (isAdmin) {
-      const request = context.switchToHttp().getRequest();
-      const user = request.user;
+    if (!isJwtAuthenticated) {
+      return false;
+    }
 
-      // Check if the user is an admin
-      if (user && user.isAdmin) {
-        return true;
-      }
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    if (user && user.isAdmin) {
+      return true;
     }
 
     return false;

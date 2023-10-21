@@ -20,7 +20,6 @@ export class FieldRepository {
             }
         });
     }
-
     async create(fieldData: Partial<Field>): Promise<Field> {
         const field = this.fieldRepository.create(fieldData);
         return await this.fieldRepository.save(field);

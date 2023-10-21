@@ -10,13 +10,24 @@ export class FileService {
   constructor(
     @InjectRepository(ApplicationFile)
     private readonly fileRepository: Repository<ApplicationFile>,
-  ) {}
+  ) { }
+
+  async getById(fileId: string): Promise<ApplicationFile | undefined> {
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    return file
+  }
+
+  async saveApplicationId(fileId: string, applicationId: string): Promise<void> {
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    file.applicationId = applicationId;
+    await this.fileRepository.save(file);
+  }
 
   async uploadFile(file: Express.Multer.File, userId: number): Promise<ApplicationFile> {
     const uploadFolder = process.env.UPLOAD_PATH;
 
     const newFile = new ApplicationFile();
-    newFile.filePath = `${uploadFolder}/${file.filename}`;
+    newFile.fileName = `${file.filename}`;
     newFile.userId = userId;
 
     const savedFile = await this.fileRepository.save(newFile);
@@ -24,7 +35,7 @@ export class FileService {
   }
 
   async deleteFile(fileId: string, userId: number) {
-    const file = await this.fileRepository.findOne({where: {id:fileId}});
+    const file = await this.fileRepository.findOne({ where: { id: fileId } });
 
     if (!file) {
       throw new NotFoundException('File not found');

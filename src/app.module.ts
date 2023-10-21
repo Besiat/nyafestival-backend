@@ -32,6 +32,12 @@ import { ApplicationFile } from './entity/website/application-file.entity';
 import multer = require('multer');
 import dotenv = require('dotenv');
 import ShortUniqueId from 'short-unique-id';
+import { ApplicationService } from './services/application.service';
+import { ApplicationRepository } from './repositories/application.repository';
+import { ApplicationDataRepository } from './repositories/application-data.repository';
+import { ApplicationController } from './controllers/application.controller';
+import { Application } from './entity/festival/application.entity';
+import { ApplicationData } from './entity/festival/application-data.entity';
 
 dotenv.config()
 
@@ -52,16 +58,17 @@ dotenv.config()
       signOptions: { expiresIn: '1h' },
     }),
     TypeOrmModule.forRootAsync({
-      useClass: DatabaseConfiguration, // Use your custom configuration class
+      useClass: DatabaseConfiguration
     }),
-    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile])],
+    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData])],
   controllers: [
     PagesController,
     NominationController,
     UserController,
     FieldsController,
     SubNominationController,
-    FileController
+    FileController,
+    ApplicationController
   ],
   providers: [
     PageService,
@@ -77,7 +84,10 @@ dotenv.config()
     FieldService,
     SubNominationRepository,
     SubNominationService,
-    FileService],
+    FileService,
+    ApplicationService,
+    ApplicationRepository,
+    ApplicationDataRepository],
 })
 export class AppModule {
 

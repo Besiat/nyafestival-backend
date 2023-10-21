@@ -3,6 +3,7 @@ import { NominationRepository } from '../repositories/nomination.repository';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { FieldRepository } from '../repositories/field.repository'; // Import the FieldRepository
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
+import { Field } from '../entity/festival/field.entity';
 
 @Injectable()
 export class NominationService {
@@ -35,7 +36,12 @@ export class NominationService {
         const nomination = await this.getNominationById(nominationId);
         return nomination.subNominations;
     }
-    
+
+    async getFields(nominationId: string): Promise<Field[]> {
+        const nomination = await this.getNominationById(nominationId);
+        return nomination.fields;
+    }
+
     async addFieldToNomination(nominationId: string, fieldId: string) {
         const nomination = await this.nominationRepository.get(nominationId);
         if (!nomination) {

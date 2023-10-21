@@ -15,7 +15,7 @@ export class SubNominationRepository {
     }
 
     async get(id: string): Promise<SubNomination | undefined> {
-        return await this.subNominationRepository.findOne({ where: { subNominationId: id } });
+        return await this.subNominationRepository.findOne({ where: { subNominationId: id }, relations: ['nomination'] });
     }
 
     async create(subNominationData: Partial<SubNomination>): Promise<SubNomination> {

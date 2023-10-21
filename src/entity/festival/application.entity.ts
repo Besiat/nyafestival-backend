@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { SubNomination } from "./sub-nomination.entity";
 import { User } from "../website/user";
 import { ApplicationData } from "./application-data.entity";
@@ -19,8 +19,8 @@ export class Application {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @ManyToOne(() => ApplicationData, (applicationData) => applicationData.application)
-  applicationData: ApplicationData;
+  @OneToMany(() => ApplicationData, (applicationData) => applicationData.application)
+  applicationData: ApplicationData[];
 
   @Column()
   verified: boolean;

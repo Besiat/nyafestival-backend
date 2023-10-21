@@ -1,4 +1,9 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class ApplicationDataDTO {
+    @ApiProperty({ description: 'Field ID', example: '123' })
     fieldId: string;
-    value: string | Express.Multer.File;
+
+    @ApiProperty({ description: 'Value', example: 'Some Value' })
+    value: string;
 }

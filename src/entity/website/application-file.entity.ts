@@ -10,7 +10,7 @@ export class ApplicationFile {
 
   @Column()
   @ApiProperty()
-  filePath: string;
+  fileName: string;
 
   @Column()
   @ApiProperty()

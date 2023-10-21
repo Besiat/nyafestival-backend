@@ -12,6 +12,9 @@ export class ApplicationData {
   @JoinColumn({ name: 'applicationId' })
   application: Application;
 
+  @Column()
+  fieldId: string;
+
   @ManyToOne(() => Field)
   @JoinColumn({ name: 'fieldId' })
   field: Field;

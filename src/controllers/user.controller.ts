@@ -16,6 +16,7 @@ export class UserController {
     ) { }
 
     @Post('register')
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiResponse({ status: 201, description: 'User registered successfully' })
     async register(@Body(ValidationPipe) registerDto: RegisterDto): Promise<{ message: string }> {
         const user = await this.authService.register(registerDto);
@@ -23,8 +24,8 @@ export class UserController {
     }
 
     @Post('login')
-    @ApiResponse({ status: 200, description: 'Login successful', type: LoginDto })
     @Throttle({ default: { limit: 1, ttl: 5000 } })
+    @ApiResponse({ status: 200, description: 'Login successful', type: LoginDto })
     async login(@Body(ValidationPipe) loginDto: LoginDto): Promise<{ accessToken: string }> {
         const accessToken = await this.authService.loginUsingEmail(loginDto);
         return accessToken;

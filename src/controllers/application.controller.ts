@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiParam, ApiBearerAuth } 
 import { RegisterApplicationDTO } from '../dto/register-application.dto';
 import { ApplicationService } from '../services/application.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('api/applications')
 @ApiTags('Applications')
@@ -10,6 +11,7 @@ export class ApplicationController {
     constructor(private readonly applicationService: ApplicationService) { }
 
     @Post()
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiOperation({ operationId: 'register', summary: 'Register a new application' })
     @ApiBody({ type: RegisterApplicationDTO, description: 'Application data to register' })
     @ApiResponse({ status: 201, description: 'Registers a new application' })

@@ -4,7 +4,7 @@ import { SubNominationService } from "./sub-nomination.service";
 import { NominationService } from "./nomination.service";
 import { FieldType } from "../enums/fieldType";
 import { promises as fsPromises } from 'fs';
-import { AcceptedState, Application } from "../entity/festival/application.entity";
+import { ApplicationState, Application } from "../entity/festival/application.entity";
 import { ApplicationRepository } from "../repositories/application.repository";
 import { ApplicationData } from "../entity/festival/application-data.entity";
 import { ApplicationDataRepository } from "../repositories/application-data.repository";
@@ -20,6 +20,10 @@ export class ApplicationService {
         private readonly applicationDataRepository: ApplicationDataRepository,
         private readonly fileService: FileService,
     ) { }
+
+    async getByUserId(userId: string): Promise<Application[]> {
+        return this.applicationRepository.getByUserId(userId);
+    }
 
     async registerApplication(userId: string, application: RegisterApplicationDTO) {
         const subNomination = await this.subNominationService.getSubNominationById(application.subNominationId);
@@ -48,6 +52,18 @@ export class ApplicationService {
         }
     }
 
+    async setPendingState(applicationId: string): Promise<void> {
+        const application = await this.applicationRepository.get(applicationId);
+        application.state = ApplicationState.Pending;
+        await this.applicationRepository.update(application);
+    }
+
+    async setInvalidState(applicationId: string, note: string): Promise<void> {
+        const application = await this.applicationRepository.get(applicationId);
+        application.state = ApplicationState.Invalid;
+        application.adminNote = note;
+        await this.applicationRepository.update(application);
+    }
     private async validateApplicationData(applicationData, fields) {
         for (const field of fields) {
             const applicationDataItem = applicationData.find(appData => appData.fieldId === field.fieldId);
@@ -72,8 +88,7 @@ export class ApplicationService {
 
     private async createApplication(userId, subNomination) {
         const newApplication = new Application();
-        newApplication.verified = false;
-        newApplication.accepted = AcceptedState.Uncertain;
+        newApplication.state = ApplicationState.New;
         newApplication.subNomination = subNomination;
         newApplication.userId = userId;
         return this.applicationRepository.create(newApplication);

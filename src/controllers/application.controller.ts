@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Param, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterApplicationDTO } from '../dto/register-application.dto';
 import { ApplicationService } from '../services/application.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { Throttle } from '@nestjs/throttler';
+import { Application } from '../entity/festival/application.entity';
 
 @Controller('api/applications')
 @ApiTags('Applications')
@@ -20,5 +21,30 @@ export class ApplicationController {
     async registerApplication(@Body() application: RegisterApplicationDTO, @Request() req): Promise<void> {
         const userId = req.user.userId;
         this.applicationService.registerApplication(userId, application);
+    }
+
+    @Post(':applicationId/set-pending-state')
+    @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })
+    @ApiResponse({ status: 200, description: 'Application set to Pending state' })
+    @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    async setPendingState(@Param('applicationId') applicationId: string): Promise<void> {
+        await this.applicationService.setPendingState(applicationId);
+    }
+
+    @Post(':applicationId/set-invalid-state')
+    @ApiOperation({ operationId: 'setInvalidState', summary: 'Set the application to Invalid state' })
+    @ApiResponse({ status: 200, description: 'Application set to Invalid state' })
+    @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    async setInvalidState(@Param('applicationId') applicationId: string, @Body() note: string): Promise<void> {
+        await this.applicationService.setInvalidState(applicationId, note);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Get('userApplications')
+    @ApiResponse({ status: 200 })
+    async getApplications(@Request() req): Promise<Application[]> {
+        const applications = this.applicationService.getByUserId(req.user.userId);
+        return applications;
     }
 }

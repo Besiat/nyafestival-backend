@@ -22,6 +22,10 @@ export class ApplicationRepository {
         });
     }
 
+    async getByUserId(userId: string): Promise<Application[]> {
+        return await this.applicationRepository.find({ where: { userId }, relations: ['applicationData'] })
+    }
+
     async create(applicationData: Partial<Application>): Promise<Application> {
         const application = this.applicationRepository.create(applicationData);
         return await this.applicationRepository.save(application);

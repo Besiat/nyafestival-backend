@@ -7,12 +7,15 @@ import { LoginDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ProfileDTO } from '../dto/profile.dto';
 import { Throttle } from '@nestjs/throttler';
+import { Application } from '../entity/festival/application.entity';
+import { UserService } from '../services/user.service';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
 export class UserController {
     constructor(
         private readonly authService: AuthService,
+        private readonly userService: UserService,
     ) { }
 
     @Post('register')

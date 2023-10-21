@@ -22,15 +22,17 @@ export class Application {
   @OneToMany(() => ApplicationData, (applicationData) => applicationData.application)
   applicationData: ApplicationData[];
 
-  @Column()
-  verified: boolean;
+  @Column({nullable: true})
+  adminNote?: string;
 
   @Column()
-  accepted: AcceptedState;
+  state: ApplicationState;
 }
 
-export enum AcceptedState {
-  Uncertain = 0,
+export enum ApplicationState {
+  New = 0,
+  Invalid,
+  Pending,
   Denied,
   Accepted,
 }

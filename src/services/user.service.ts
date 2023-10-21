@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from '../entity/website/user';
 import { UserRepository } from '../repositories/user.repository';
+import { Application } from '../entity/festival/application.entity';
 
 @Injectable()
 export class UserService {
@@ -23,11 +24,11 @@ export class UserService {
         return this.userRepository.findByVkId(id);
     }
 
-    async findByConfirmationCode(confirmationCode:string) : Promise<User | undefined> {
+    async findByConfirmationCode(confirmationCode: string): Promise<User | undefined> {
         return this.userRepository.findByConfirmationCode(confirmationCode);
     }
 
-    async update(user:User): Promise<User> {
+    async update(user: User): Promise<User> {
         return this.userRepository.update(user);
     }
 }

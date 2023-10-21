@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/s
 import { AdminGuard } from '../guards/admin-guard';
 import { SubNominationService } from '../services/sub-nomination.service';
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
+import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/sub-nominations')
 @ApiTags('SubNominations')

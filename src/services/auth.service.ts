@@ -52,7 +52,7 @@ export class AuthService {
     }
 
     async login(user: any) {
-        const payload = { userId: user.userId, username: user.username }; // You can include additional user data in the payload
+        const payload = { userId: user.userId, username: user.username, isAdmin: user.isAdmin }; // You can include additional user data in the payload
         return {
             accessToken: this.jwtService.sign(payload),
         };

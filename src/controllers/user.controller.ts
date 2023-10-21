@@ -2,12 +2,12 @@ import { Controller, Post, Body, ValidationPipe, UseGuards, Request, Get, Res } 
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'; // Import Swagger decorators
 import { User } from '../entity/website/user';
 import { AuthService } from '../services/auth.service';
-import { UserService } from '../services/user.service';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-guard';
+import { ProfileDTO } from '../dto/profile.dto';
 
-@ApiTags('Authentication') // Add a tag for this controller
+@ApiTags('Authentication')
 @Controller('api/auth')
 export class UserController {
     constructor(
@@ -15,14 +15,14 @@ export class UserController {
     ) { }
 
     @Post('register')
-    @ApiResponse({ status: 201, description: 'User registered successfully' }) // Define the response for Swagger
+    @ApiResponse({ status: 201, description: 'User registered successfully' })
     async register(@Body(ValidationPipe) registerDto: RegisterDto): Promise<{ message: string }> {
         const user = await this.authService.register(registerDto);
         return { message: 'User registered successfully' };
     }
 
     @Post('login')
-    @ApiResponse({ status: 200, description: 'Login successful', type: LoginDto }) // Define the response for Swagger
+    @ApiResponse({ status: 200, description: 'Login successful', type: LoginDto })
     async login(@Body(ValidationPipe) loginDto: LoginDto): Promise<{ accessToken: string }> {
         const accessToken = await this.authService.loginUsingEmail(loginDto);
         return accessToken;
@@ -30,12 +30,13 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    @ApiBearerAuth() // Specify that this endpoint requires Bearer authentication
-    @ApiResponse({ status: 200, description: 'User profile', type: User }) // Define the response for Swagger
-    async getProfile(@Request() req): Promise<User> {
-        // This endpoint is protected and requires a valid JWT to access.
-        // The user object is available in req.user after successful authentication.
-        return req.user;
+    @ApiBearerAuth() 
+    @ApiResponse({ status: 200, description: 'User profile', type: User })
+    async getProfile(@Request() req): Promise<ProfileDTO> {
+        const profileDto = new ProfileDTO();
+        profileDto.email = req.user.email;
+        profileDto.username = req.user.username;
+        return profileDto;
     }
 
     @Post('login-from-vk')
@@ -52,5 +53,15 @@ export class UserController {
     @ApiResponse({ status: 200, description: 'Email confirmed' })
     async confirmEmail(@Body() body): Promise<void>{
         await this.authService.confirmEmail(body?.confirmationCode);
+    }
+
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Post('refresh-token')
+    @ApiResponse({status:200})
+    async refreshToken(@Request() req): Promise<{ accessToken: string }> {
+      const newToken = await this.authService.login(req.user);
+      return newToken;
     }
 }

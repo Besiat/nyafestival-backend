@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FieldService } from '../services/field.service';
 import { Field } from '../entity/festival/field.entity';
+import { AdminGuard } from '../guards/admin-guard';
 
 @Controller('api/fields')
-@ApiTags('Fields') // Optional: Group your API under a tag
+@ApiTags('Fields')
+@UseGuards(AdminGuard)
 export class FieldsController {
   constructor(private readonly fieldService: FieldService) { }
 

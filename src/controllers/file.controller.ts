@@ -5,6 +5,7 @@ import { ApplicationFile } from '../entity/website/application-file.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { AdminGuard } from '../guards/admin-guard';
 
 @Controller('api/files')
 export class FileController {
@@ -22,6 +23,7 @@ export class FileController {
         return this.fileService.uploadFile(file, userId);
     }
 
+    @UseGuards(AdminGuard)
     @Delete(':id')
     async deleteFile(@Param('id') fileId: string, @Request() req) {
         const userId = req.user.id; // Get the user ID from the JWT token payload

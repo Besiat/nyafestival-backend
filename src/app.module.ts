@@ -55,7 +55,7 @@ dotenv.config()
     }),
     JwtModule.register({
       secret: `${process.env.TOKEN_SECRET}`,
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '30d' },
     }),
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfiguration

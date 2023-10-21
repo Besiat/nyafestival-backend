@@ -10,7 +10,7 @@ export class ApplicationRepository {
     ) { }
 
     async getAll(): Promise<Application[]> {
-        return await this.applicationRepository.find();
+        return await this.applicationRepository.find({ relations: ['applicationData'] });
     }
 
     async get(id: string): Promise<Application | undefined> {
@@ -18,7 +18,7 @@ export class ApplicationRepository {
             where: {
                 applicationId: id,
             },
-            //relations: ['subNomination', 'user', 'applicationData'],
+            relations: ['subNomination', 'applicationData'],
         });
     }
 

@@ -27,6 +27,9 @@ export class Application {
 
   @Column()
   state: ApplicationState;
+
+  @Column()
+  fullName: string;
 }
 
 export enum ApplicationState {

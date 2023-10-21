@@ -9,7 +9,6 @@ import { ApplicationRepository } from "../repositories/application.repository";
 import { ApplicationData } from "../entity/festival/application-data.entity";
 import { ApplicationDataRepository } from "../repositories/application-data.repository";
 import { FileService } from "./file.service";
-import { ApplicationFile } from "../entity/website/application-file.entity";
 
 @Injectable()
 export class ApplicationService {
@@ -72,7 +71,7 @@ export class ApplicationService {
             }
 
             if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
-                const file = await this.fileService.getById(applicationDataItem.value);
+                const file = await this.fileService.getByFileName(applicationDataItem.value);
                 if (!file) {
                     throw new BadRequestException("File does not exist");
                 }

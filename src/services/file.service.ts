@@ -14,11 +14,16 @@ export class FileService {
 
   async getById(fileId: string): Promise<ApplicationFile | undefined> {
     const file = await this.fileRepository.findOne({ where: { id: fileId } });
+    return file;
+  }
+
+  async getByFileName(fileName: string) : Promise<ApplicationFile | undefined> {
+    const file = await this.fileRepository.findOne({ where: { fileName: fileName } });
     return file
   }
 
-  async saveApplicationId(fileId: string, applicationId: string): Promise<void> {
-    const file = await this.fileRepository.findOne({ where: { id: fileId } });
+  async saveApplicationId(fileName: string, applicationId: string): Promise<void> {
+    const file = await this.fileRepository.findOne({ where: { fileName } });
     file.applicationId = applicationId;
     await this.fileRepository.save(file);
   }

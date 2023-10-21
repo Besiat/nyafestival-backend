@@ -22,13 +22,13 @@ export class Application {
   @OneToMany(() => ApplicationData, (applicationData) => applicationData.application)
   applicationData: ApplicationData[];
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   adminNote?: string;
 
-  @Column()
+  @Column({ default: 0 })
   state: ApplicationState;
 
-  @Column()
+  @Column({default: ""})
   fullName: string;
 }
 

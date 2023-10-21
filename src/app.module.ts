@@ -38,6 +38,8 @@ import { ApplicationDataRepository } from './repositories/application-data.repos
 import { ApplicationController } from './controllers/application.controller';
 import { Application } from './entity/festival/application.entity';
 import { ApplicationData } from './entity/festival/application-data.entity';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 dotenv.config()
 
@@ -60,7 +62,12 @@ dotenv.config()
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfiguration
     }),
-    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData])],
+    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData]),
+    ThrottlerModule.forRoot([{
+      ttl: 20000,
+      limit: 10,
+    }]),
+  ],
   controllers: [
     PagesController,
     NominationController,
@@ -71,6 +78,10 @@ dotenv.config()
     ApplicationController
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    },
     PageService,
     PageRepository,
     NominationService,

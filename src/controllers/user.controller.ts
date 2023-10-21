@@ -6,6 +6,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ProfileDTO } from '../dto/profile.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
@@ -23,6 +24,7 @@ export class UserController {
 
     @Post('login')
     @ApiResponse({ status: 200, description: 'Login successful', type: LoginDto })
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
     async login(@Body(ValidationPipe) loginDto: LoginDto): Promise<{ accessToken: string }> {
         const accessToken = await this.authService.loginUsingEmail(loginDto);
         return accessToken;
@@ -30,7 +32,7 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    @ApiBearerAuth() 
+    @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'User profile', type: User })
     async getProfile(@Request() req): Promise<ProfileDTO> {
         const profileDto = new ProfileDTO();
@@ -40,18 +42,19 @@ export class UserController {
     }
 
     @Post('login-from-vk')
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiResponse({ status: 200, description: 'Login from VK successful', type: User })
     async loginFromVk(@Body() vkProfile: any, @Request() req): Promise<{ accessToken: string }> {
         // Use the findOrCreateUserFromVk function
         const user = await this.authService.findOrCreateUserFromVk(vkProfile);
-
+        console.log('11111');
         // Return the access token or any other response you need
         return { accessToken: user.accessToken };
     }
 
     @Post('confirm-email')
     @ApiResponse({ status: 200, description: 'Email confirmed' })
-    async confirmEmail(@Body() body): Promise<void>{
+    async confirmEmail(@Body() body): Promise<void> {
         await this.authService.confirmEmail(body?.confirmationCode);
     }
 
@@ -59,9 +62,9 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @Post('refresh-token')
-    @ApiResponse({status:200})
+    @ApiResponse({ status: 200 })
     async refreshToken(@Request() req): Promise<{ accessToken: string }> {
-      const newToken = await this.authService.login(req.user);
-      return newToken;
+        const newToken = await this.authService.login(req.user);
+        return newToken;
     }
 }

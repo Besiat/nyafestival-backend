@@ -12,7 +12,7 @@ export class FileController {
     constructor(private readonly fileService: FileService) { }
 
     @Post('upload')
-    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 3 * 1024 * 1024 } })) // 'file' is the field name for the uploaded file
+    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } })) // 'file' is the field name for the uploaded file
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     async uploadFile(

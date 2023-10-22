@@ -44,7 +44,7 @@ export class ApplicationService {
 
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);;
 
-        this.validateApplicationData(application.applicationData, fields);
+        await this.validateApplicationData(application.applicationData, fields);
 
         const savedApplication = await this.createApplication(userId, subNomination, application.applicationData, fields, subNomination.nomination.fullNameTemplate);
 
@@ -128,6 +128,7 @@ export class ApplicationService {
                 if (!file) {
                     continue;
                 }
+
                 const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
                 try {
                     await fsPromises.access(filePath, fsPromises.constants.F_OK);

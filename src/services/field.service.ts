@@ -15,7 +15,7 @@ export class FieldService {
     }
 
     async createField(fieldData: Partial<Field>): Promise<Field> {
-        const fieldWithSameCode = this.fieldRepository.getByCode(fieldData.code);
+        const fieldWithSameCode = await this.fieldRepository.getByCode(fieldData.code);
         if (!!fieldWithSameCode) throw new BadRequestException(`Field with code ${fieldData.code} already exist`)
         return this.fieldRepository.create(fieldData);
     }

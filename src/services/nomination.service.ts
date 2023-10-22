@@ -3,14 +3,16 @@ import { NominationRepository } from '../repositories/nomination.repository';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { FieldRepository } from '../repositories/field.repository'; // Import the FieldRepository
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
-import { Field } from '../entity/festival/field.entity';
 import { NominationField } from '../entity/festival/nomination-fields.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class NominationService {
     constructor(
         private readonly nominationRepository: NominationRepository,
-        private readonly fieldRepository: FieldRepository, // Inject the FieldRepository
+        private readonly fieldRepository: FieldRepository,
+        @InjectRepository(NominationField) private readonly nominationFieldRepository: Repository<NominationField>
     ) { }
 
     async getAllNominations() {
@@ -71,22 +73,12 @@ export class NominationService {
         nominationField.fieldId = fieldId;
         nominationField.nominationId = nominationId;
         nominationField.order = order;
-        nomination.nominationFields.push(nominationField);
-        await this.updateNomination(nomination);
+        const newNominationField = this.nominationFieldRepository.create(nominationField);
+        await this.nominationFieldRepository.save(newNominationField);
     }
 
     async removeFieldFromNomination(nominationId: string, fieldId: string) {
-        const nomination = await this.nominationRepository.get(nominationId);
-        if (!nomination) {
-            throw new Error('Nomination not found');
-        }
-
-        const fieldIndex = nomination.nominationFields.findIndex((field) => field.fieldId === fieldId);
-        if (fieldIndex === -1) {
-            throw new Error('Field not found in the nomination');
-        }
-
-        nomination.nominationFields.splice(fieldIndex, 1);
-        await this.updateNomination(nomination);
+        const nominationField = await this.nominationFieldRepository.findOne({where:{nominationId,fieldId}});
+        await this.nominationFieldRepository.delete(nominationField);
     }
 }

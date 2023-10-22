@@ -40,6 +40,7 @@ import { Application } from './entity/festival/application.entity';
 import { ApplicationData } from './entity/festival/application-data.entity';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { NominationField } from './entity/festival/nomination-fields.entity';
 
 dotenv.config()
 
@@ -62,7 +63,7 @@ dotenv.config()
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfiguration
     }),
-    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData]),
+    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField]),
     ThrottlerModule.forRoot([{
       ttl: 20000,
       limit: 10,

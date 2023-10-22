@@ -21,6 +21,6 @@ export class Nomination {
     @OneToMany(() => SubNomination, (subNomination) => subNomination.nomination)
     subNominations: SubNomination[];
 
-    @OneToMany(() => NominationField, (nominationField) => nominationField.nomination)
+    @OneToMany(() => NominationField, (nominationField) => nominationField.nomination, { cascade: true })
     nominationFields: NominationField[];
 }

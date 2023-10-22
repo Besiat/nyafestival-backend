@@ -1,10 +1,11 @@
-import { Controller, Post, Body, UseGuards, Request, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Param, Get, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterApplicationDTO } from '../dto/register-application.dto';
 import { ApplicationService } from '../services/application.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { Throttle } from '@nestjs/throttler';
 import { Application } from '../entity/festival/application.entity';
+import { UpdateApplicationDTO } from '../dto/update-application.dto';
 
 @Controller('api/applications')
 @ApiTags('Applications')
@@ -22,6 +23,19 @@ export class ApplicationController {
         const userId = req.user.userId;
         this.applicationService.registerApplication(userId, application);
     }
+
+    @Put()
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
+    @ApiOperation({ operationId: 'update', summary: 'Register a new application' })
+    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to register' })
+    @ApiResponse({ status: 201, description: 'Registers a new application' })
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
+        const userId = req.user.userId;
+        this.applicationService.updateApplication(userId, application);
+    }
+
 
     @Post(':applicationId/set-pending-state')
     @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })

@@ -59,10 +59,14 @@ export class ApplicationService {
         }
     }
 
-    async updateApplication(updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
+    async updateApplication(userId: string, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
         const application = await this.applicationRepository.get(updateApplicationDTO.applicationId);
         if (!application) {
             throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
+        }
+
+        if (userId !== application.userId) {
+            throw new BadRequestException(`Different userId`);
         }
 
         const subNomination = await this.subNominationService.getSubNominationById(application.subNomination.subNominationId);

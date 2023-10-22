@@ -29,8 +29,6 @@ export class FileService {
   }
 
   async uploadFile(file: Express.Multer.File, userId: number): Promise<ApplicationFile> {
-    const uploadFolder = process.env.UPLOAD_PATH;
-
     const newFile = new ApplicationFile();
     newFile.fileName = `${file.filename}`;
     newFile.userId = userId;

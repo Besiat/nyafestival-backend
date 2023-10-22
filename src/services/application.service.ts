@@ -68,7 +68,6 @@ export class ApplicationService {
         const subNomination = await this.subNominationService.getSubNominationById(application.subNomination.subNominationId);
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
-        // Validate and update application data
         for (const updatedAppData of updateApplicationDTO.applicationData) {
             const field = fields.find(f => f.fieldId === updatedAppData.fieldId);
             if (!field) {
@@ -82,17 +81,16 @@ export class ApplicationService {
 
             if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
                 const file = await this.fileService.getByFileName(updatedAppData.value);
-                if (!file) {
-                    throw new BadRequestException("File does not exist");
-                }
-                const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
-                try {
-                    await fsPromises.access(filePath, fsPromises.constants.F_OK);
-                } catch (err) {
-                    throw new BadRequestException(`File does not exist at path: ${filePath}`);
-                }
+                if (file) {
+                    const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
+                    try {
+                        await fsPromises.access(filePath, fsPromises.constants.F_OK);
+                    } catch (err) {
+                        throw new BadRequestException(`File does not exist at path: ${filePath}`);
+                    }
 
-                await this.fileService.saveApplicationId(updatedAppData.value, application.applicationId);
+                    await this.fileService.saveApplicationId(updatedAppData.value, application.applicationId);
+                }
             }
 
             existingAppData.value = updatedAppData.value;
@@ -128,7 +126,7 @@ export class ApplicationService {
             if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
                 const file = await this.fileService.getByFileName(applicationDataItem.value);
                 if (!file) {
-                    throw new BadRequestException("File does not exist");
+                    continue;
                 }
                 const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
                 try {

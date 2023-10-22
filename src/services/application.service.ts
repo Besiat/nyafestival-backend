@@ -79,9 +79,6 @@ export class ApplicationService {
             }
 
             const existingAppData = application.applicationData.find(appData => appData.fieldId === updatedAppData.fieldId);
-            if (!existingAppData) {
-                throw new BadRequestException(`Application data not found for fieldId: ${updatedAppData.fieldId}`);
-            }
 
             if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
                 const file = await this.fileService.getByFileName(updatedAppData.value);
@@ -97,7 +94,17 @@ export class ApplicationService {
                 }
             }
 
-            existingAppData.value = updatedAppData.value;
+            if (existingAppData) {
+                existingAppData.value = updatedAppData.value;
+                this.applicationDataRepository.update(existingAppData);
+            }
+            else {
+                const newAppData = new ApplicationData();
+                newAppData.fieldId=field.fieldId;
+                newAppData.application = application;
+                newAppData.value = updatedAppData.value;
+                await this.applicationDataRepository.create(newAppData);
+            }
         }
 
         const dtos = application.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value } });

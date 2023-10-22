@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { FieldType } from "../../enums/fieldType";
-import { SubNomination } from "./sub-nomination.entity";
-import { FieldCategory } from "../../enums/fieldCategory";
 
 @Entity()
 export class Field {
@@ -29,12 +27,12 @@ export class Field {
     @Column({ type: 'enum', enum: FieldType })
     type: FieldType;
 
-    @ApiProperty({ enum: FieldCategory })
-    @Column({ type: 'enum', enum: FieldCategory })
-    category: FieldCategory;
+    @ApiProperty()
+    @Column()
+    category: string;
 
     @ApiProperty()
-    @Column({nullable: true})
+    @Column({ nullable: true })
     dependsOn?: string;
 
     @ApiProperty()

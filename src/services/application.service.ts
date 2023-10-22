@@ -162,7 +162,7 @@ export class ApplicationService {
         newApplication.state = ApplicationState.New;
         newApplication.subNomination = subNomination;
         newApplication.userId = userId;
-
+        newApplication.applicationDate = new Date();
         // Implement logic to replace placeholders in fullNameTemplate
         newApplication.fullName = this.replacePlaceholders(fullNameTemplate, applicationData, fields);
 

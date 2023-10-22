@@ -28,8 +28,11 @@ export class Application {
   @Column({ default: 0 })
   state: ApplicationState;
 
-  @Column({default: ""})
+  @Column({ default: "" })
   fullName: string;
+
+  @Column({ nullable: true })
+  applicationDate: Date;
 }
 
 export enum ApplicationState {

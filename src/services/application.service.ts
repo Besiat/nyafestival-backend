@@ -100,7 +100,7 @@ export class ApplicationService {
             }
             else {
                 const newAppData = new ApplicationData();
-                newAppData.fieldId=field.fieldId;
+                newAppData.fieldId = field.fieldId;
                 newAppData.application = application;
                 newAppData.value = updatedAppData.value;
                 await this.applicationDataRepository.create(newAppData);
@@ -170,17 +170,21 @@ export class ApplicationService {
     }
 
     private replacePlaceholders(template: string, applicationData: ApplicationDataDTO[], fields: Field[]): string {
-        // Regular expression to match placeholders like {VAR}
-        const placeholderRegex = /{(\w+)}/g;
+        try {
+            const placeholderRegex = /{(\w+)}/g;
 
-        // Replace placeholders in the template
-        const replacedTemplate = template.replace(placeholderRegex, (match, placeholder) => {
-            const field = fields.find(f => f.code == placeholder);
-            const data = applicationData.find((item) => item.fieldId === field.fieldId);
-            return data ? data.value : match; // Replace with data.value or keep the original placeholder
-        });
+            // Replace placeholders in the template
+            const replacedTemplate = template.replace(placeholderRegex, (match, placeholder) => {
+                const field = fields.find(f => f.code == placeholder);
+                const data = applicationData.find((item) => item.fieldId === field.fieldId);
+                return data ? data.value : match; // Replace with data.value or keep the original placeholder
+            });
 
-        return replacedTemplate;
+            return replacedTemplate;
+        }
+        catch {
+            return "";
+        }
     }
 
     private async createApplicationData(savedApplication, appData, field) {

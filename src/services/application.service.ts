@@ -69,7 +69,7 @@ export class ApplicationService {
             throw new BadRequestException(`Different userId`);
         }
 
-        const subNomination = await this.subNominationService.getSubNominationById(application.subNomination.subNominationId);
+        const subNomination = await this.subNominationService.getSubNominationById(updateApplicationDTO.subNominationId);
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
         for (const updatedAppData of updateApplicationDTO.applicationData) {
@@ -102,7 +102,8 @@ export class ApplicationService {
 
         const dtos = application.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value } });
 
-        application.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields)
+        application.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields);
+        application.subNomination = subNomination;
         // Save the updated application
         await this.applicationRepository.update(application);
     }

@@ -53,7 +53,7 @@ export class ApplicationService {
 
             await this.createApplicationData(savedApplication, appData, field);
 
-            if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
+            if ((field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) && !!appData.value) {
                 await this.fileService.saveApplicationId(appData.value, savedApplication.applicationId);
             }
         }

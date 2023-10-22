@@ -66,7 +66,7 @@ dotenv.config()
     TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField]),
     ThrottlerModule.forRoot([{
       ttl: 20000,
-      limit: 10,
+      limit: 15,
     }]),
   ],
   controllers: [

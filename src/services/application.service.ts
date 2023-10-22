@@ -42,7 +42,7 @@ export class ApplicationService {
             throw new BadRequestException("User is empty");
         }
 
-        const fields = await this.nominationService.getFields(subNomination.nomination.nominationId);
+        const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);;
 
         this.validateApplicationData(application.applicationData, fields);
 
@@ -66,7 +66,7 @@ export class ApplicationService {
         }
 
         const subNomination = await this.subNominationService.getSubNominationById(application.subNomination.subNominationId);
-        const fields = await this.nominationService.getFields(subNomination.nomination.nominationId);
+        const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
         // Validate and update application data
         for (const updatedAppData of updateApplicationDTO.applicationData) {

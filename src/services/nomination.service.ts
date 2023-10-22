@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { NominationRepository } from '../repositories/nomination.repository';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { FieldRepository } from '../repositories/field.repository'; // Import the FieldRepository
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
 import { Field } from '../entity/festival/field.entity';
+import { NominationField } from '../entity/festival/nomination-fields.entity';
 
 @Injectable()
 export class NominationService {
@@ -37,12 +38,21 @@ export class NominationService {
         return nomination.subNominations;
     }
 
-    async getFields(nominationId: string): Promise<Field[]> {
+    async getFields(nominationId: string): Promise<NominationField[]> {
         const nomination = await this.getNominationById(nominationId);
-        return nomination.fields;
+        return nomination.nominationFields;
     }
 
-    async addFieldToNomination(nominationId: string, fieldId: string) {
+    async updateFieldOrder(nominationId: string, fieldId: string, order: number)
+    {
+        const nomination = await this.nominationRepository.get(nominationId);
+        const nominationField = nomination.nominationFields.find(p=>p.fieldId==fieldId);
+        if (!nominationField) throw new BadRequestException(`Field ${fieldId} does not exist in nomination ${nominationId}`);
+        nominationField.order = order;
+        await this.updateNomination(nomination);
+    }
+
+    async addFieldToNomination(nominationId: string, fieldId: string, order: number) {
         const nomination = await this.nominationRepository.get(nominationId);
         if (!nomination) {
             throw new Error('Nomination not found');
@@ -53,11 +63,15 @@ export class NominationService {
             throw new Error('Field not found');
         }
 
-        if (nomination.fields.some(p => p.fieldId === fieldId)) {
+        if (nomination.nominationFields.some(p => p.fieldId === fieldId)) {
             throw new Error('Nomination already contains this field');
         }
 
-        nomination.fields.push(field);
+        const nominationField = new NominationField();
+        nominationField.fieldId = fieldId;
+        nominationField.nominationId = nominationId;
+        nominationField.order = order;
+        nomination.nominationFields.push(nominationField);
         await this.updateNomination(nomination);
     }
 
@@ -67,12 +81,12 @@ export class NominationService {
             throw new Error('Nomination not found');
         }
 
-        const fieldIndex = nomination.fields.findIndex((field) => field.fieldId === fieldId);
+        const fieldIndex = nomination.nominationFields.findIndex((field) => field.fieldId === fieldId);
         if (fieldIndex === -1) {
             throw new Error('Field not found in the nomination');
         }
 
-        nomination.fields.splice(fieldIndex, 1);
+        nomination.nominationFields.splice(fieldIndex, 1);
         await this.updateNomination(nomination);
     }
 }

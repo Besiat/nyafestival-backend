@@ -20,6 +20,15 @@ export class FieldRepository {
             }
         });
     }
+
+    async getByCode(code: string): Promise<Field | undefined> {
+        return await this.fieldRepository.findOne({
+            where: {
+                code
+            }
+        })
+    }
+
     async create(fieldData: Partial<Field>): Promise<Field> {
         const field = this.fieldRepository.create(fieldData);
         return await this.fieldRepository.save(field);

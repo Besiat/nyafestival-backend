@@ -73,9 +73,10 @@ export class NominationController {
     async addFieldToNomination(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,
+        @Param('order') order: number = 0
     ): Promise<Nomination | undefined> {
         try {
-            await this.nominationService.addFieldToNomination(nominationId, fieldId);
+            await this.nominationService.addFieldToNomination(nominationId, fieldId, order);
             return this.nominationService.getNominationById(nominationId);
         } catch (error) {
             throw new BadRequestException(error.message);

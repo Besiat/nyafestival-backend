@@ -19,7 +19,7 @@ export class NominationRepository {
             where: {
                 nominationId: id,
             },
-            relations: ['fields','subNominations']
+            relations: ['nominationFields', 'nominationFields.field', 'subNominations']
         });
     }
 

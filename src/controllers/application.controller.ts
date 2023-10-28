@@ -21,7 +21,7 @@ export class ApplicationController {
     @ApiBearerAuth()
     async registerApplication(@Body() application: RegisterApplicationDTO, @Request() req): Promise<void> {
         const userId = req.user.userId;
-        this.applicationService.registerApplication(userId, application);
+        await this.applicationService.registerApplication(userId, application);
     }
 
     @Put()

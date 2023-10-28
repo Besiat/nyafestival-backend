@@ -33,7 +33,7 @@ export class ApplicationController {
     @ApiBearerAuth()
     async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
         const userId = req.user.userId;
-        this.applicationService.updateApplication(userId, application);
+        await this.applicationService.updateApplication(userId, application);
     }
 
 
@@ -58,7 +58,7 @@ export class ApplicationController {
     @Get('userApplications')
     @ApiResponse({ status: 200 })
     async getApplications(@Request() req): Promise<Application[]> {
-        const applications = this.applicationService.getByUserId(req.user.userId);
+        const applications = await this.applicationService.getByUserId(req.user.userId);
         return applications;
     }
 }

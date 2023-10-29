@@ -19,6 +19,13 @@ export class NominationController {
         return this.nominationService.getAllNominations();
     }
 
+    @Get('applications')
+    @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations with applications' })
+    @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
+    async findAllWithNominations(): Promise<Nomination[]> {
+        return this.nominationService.getAllNominationsWithApplications();
+    }
+
     @Get(':id')
     @ApiOperation({ operationId: 'findOne', summary: 'Get a nomination by ID' })
     @ApiParam({ name: 'id', type: String, description: 'Nomination ID' })

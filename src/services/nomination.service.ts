@@ -19,6 +19,11 @@ export class NominationService {
         return await this.nominationRepository.getAll();
     }
 
+    async getAllNominationsWithApplications()
+    {
+        return await this.nominationRepository.getAllWithApplications();
+    }
+
     async getNominationById(id: string) {
         return await this.nominationRepository.get(id);
     }

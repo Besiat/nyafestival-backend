@@ -14,6 +14,11 @@ export class NominationRepository {
         return await this.nominationRepository.find();
     }
 
+    async getAllWithApplications(): Promise<Nomination[]> {
+        return await this.nominationRepository.find({ relations: ['subNominations', 'subNominations.applications'] });
+
+    }
+
     async get(id: string): Promise<Nomination | undefined> {
         return await this.nominationRepository.findOne({
             where: {

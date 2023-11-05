@@ -20,6 +20,7 @@ export class NominationController {
     }
 
     @Get('applications')
+    @UseGuards(AdminGuard)
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations with applications' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
     async findAllWithNominations(): Promise<Nomination[]> {

@@ -32,6 +32,10 @@ export class ApplicationService {
         return this.applicationRepository.getByUserId(userId);
     }
 
+    async getApplicationData(applicationId:string) : Promise<ApplicationData[]> {
+        return this.applicationDataRepository.getByApplicationId(applicationId);
+    }
+
     async registerApplication(userId: string, application: RegisterApplicationDTO) {
         const subNomination = await this.subNominationService.getSubNominationById(application.subNominationId);
         if (!subNomination) {

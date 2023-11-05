@@ -6,6 +6,8 @@ import { JwtAuthGuard } from '../guards/jwt-guard';
 import { Throttle } from '@nestjs/throttler';
 import { Application } from '../entity/festival/application.entity';
 import { UpdateApplicationDTO } from '../dto/update-application.dto';
+import { ApplicationData } from '../entity/festival/application-data.entity';
+import { AdminGuard } from '../guards/admin-guard';
 
 @Controller('api/applications')
 @ApiTags('Applications')
@@ -60,5 +62,15 @@ export class ApplicationController {
     async getApplications(@Request() req): Promise<Application[]> {
         const applications = await this.applicationService.getByUserId(req.user.userId);
         return applications;
+    }
+
+    @Get(':applicationId/applicationData')
+    @ApiOperation({ operationId: 'getApplicationData', summary: 'Returns all data of the application' })
+    @ApiResponse({ status: 200, description: 'Data of the application', type: ApplicationData, isArray: true })
+    @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    @UseGuards(AdminGuard)
+    async getApplciationData(@Param('applicationId') applicationId: string): Promise<ApplicationData[]> {
+        const applicationData = await this.applicationService.getApplicationData(applicationId);
+        return applicationData;
     }
 }

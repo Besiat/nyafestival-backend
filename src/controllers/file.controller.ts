@@ -4,10 +4,11 @@ import { FileService } from '../services/file.service';
 import { ApplicationFile } from '../entity/website/application-file.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../guards/jwt-guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
 
 @Controller('api/files')
+@ApiTags('Files')
 export class FileController {
     constructor(private readonly fileService: FileService) { }
 

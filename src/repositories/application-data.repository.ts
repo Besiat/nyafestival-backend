@@ -22,6 +22,10 @@ export class ApplicationDataRepository {
         });
     }
 
+    async getByApplicationId(applicationId: string): Promise<ApplicationData[]> {
+        return this.applicationDataRepository.find({ where: { applicationId } })
+    }
+
     async create(applicationData: Partial<ApplicationData>): Promise<ApplicationData> {
         const data = this.applicationDataRepository.create(applicationData);
         return await this.applicationDataRepository.save(data);

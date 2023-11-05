@@ -28,14 +28,14 @@ export class NominationController {
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations with applications' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
     async findAllWithNominations(): Promise<Nomination[]> {
-        return this.nominationService.getAllNominationsWithApplications();
+        return (await this.nominationService.getAllNominationsWithApplications()).sort(nomination => nomination.order);
     }
 
     @Get('applicationsPublic')
     @ApiOperation({ operationId: 'findAllPublic', summary: 'Get all applications public' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
     async findAllApplicationsPublic(): Promise<NominationPublicDTO[]> {
-        const nominations = await this.nominationService.getAllNominationsWithApplications();
+        const nominations = (await this.nominationService.getAllNominationsWithApplications()).sort(nomination => nomination.order);
         const result = nominations.map(nomination => ({
             id: randomUUID(),
             name: nomination.name,

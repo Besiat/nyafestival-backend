@@ -23,4 +23,7 @@ export class Nomination {
 
     @OneToMany(() => NominationField, (nominationField) => nominationField.nomination, { cascade: true })
     nominationFields: NominationField[];
+
+    @Column({ default: 0 })
+    order: number = 0;
 }

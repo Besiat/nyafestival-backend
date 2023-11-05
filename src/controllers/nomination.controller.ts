@@ -6,6 +6,10 @@ import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
 import { JwtAuthGuard } from '../guards/jwt-guard';
+import { NominationPublicDTO } from '../dto/nomination-public.dto';
+import { randomUUID } from 'crypto';
+import { SubNominationPublicDTO } from '../dto/sub-nomination-public.dto';
+import { ApplicationPublicDTO } from '../dto/application-public.dto';
 
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
@@ -20,11 +24,33 @@ export class NominationController {
     }
 
     @Get('applications')
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations with applications' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
     async findAllWithNominations(): Promise<Nomination[]> {
         return this.nominationService.getAllNominationsWithApplications();
+    }
+
+    @Get('applicationsPublic')
+    @ApiOperation({ operationId: 'findAllPublic', summary: 'Get all applications public' })
+    @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
+    async findAllApplicationsPublic(): Promise<NominationPublicDTO[]> {
+        const nominations = await this.nominationService.getAllNominationsWithApplications();
+        const result = nominations.map(nomination => ({
+            id: randomUUID(),
+            name: nomination.name,
+            subNominations: nomination.subNominations.map(subNomination => ({
+                id: randomUUID(),
+                name: subNomination.name,
+                applications: subNomination.applications.map(application => ({
+                    id: randomUUID(),
+                    fullName: application.fullName,
+                    status: application.state,
+                })),
+            })),
+        }));
+
+        return result;
     }
 
     @Get(':id')

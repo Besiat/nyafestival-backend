@@ -3,6 +3,7 @@ import { ConfigService } from '../services/config.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Config } from '../entity/website/config.entity';
 import { AdminGuard } from '../guards/admin-guard';
+import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/configs')
 @ApiTags('Configs')
@@ -11,7 +12,7 @@ export class ConfigController {
     @Get('all')
     @ApiOperation({ operationId: 'getAllConfigs', summary: 'Get all config values' })
     @ApiResponse({ status: 200, description: 'Returns all config values', type: Config, isArray: true })
-    //@UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async getAllConfigs(): Promise<Config[]> {
         return this.configService.getAllConfigs();
     }
@@ -29,7 +30,7 @@ export class ConfigController {
     @ApiParam({ name: 'key', description: 'Config key' })
     @ApiParam({ name: 'value', description: 'Config value' })
     @ApiResponse({ status: 200, description: 'Sets a config value', type: Config })
-    //@UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async setConfig(@Param('key') key: string, @Param('value') value: string): Promise<void> {
         if (!key || !value) {
             throw new BadRequestException('Key and value are required');

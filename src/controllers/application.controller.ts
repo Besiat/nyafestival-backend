@@ -68,7 +68,7 @@ export class ApplicationController {
     @ApiOperation({ operationId: 'getApplicationData', summary: 'Returns all data of the application' })
     @ApiResponse({ status: 200, description: 'Data of the application', type: ApplicationData, isArray: true })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
-    @UseGuards(AdminGuard)
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async getApplciationData(@Param('applicationId') applicationId: string): Promise<ApplicationData[]> {
         const applicationData = await this.applicationService.getApplicationData(applicationId);
         return applicationData;

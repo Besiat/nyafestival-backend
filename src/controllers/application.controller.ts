@@ -43,14 +43,34 @@ export class ApplicationController {
     @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })
     @ApiResponse({ status: 200, description: 'Application set to Pending state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async setPendingState(@Param('applicationId') applicationId: string): Promise<void> {
         await this.applicationService.setPendingState(applicationId);
+    }
+    
+    @Post(':applicationId/accept')
+    @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })
+    @ApiResponse({ status: 200, description: 'Application set to Pending state' })
+    @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    async setAcceptedState(@Param('applicationId') applicationId: string): Promise<void> {
+        await this.applicationService.setAcceptedState(applicationId);
+    }
+
+    @Post(':applicationId/deny')
+    @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })
+    @ApiResponse({ status: 200, description: 'Application set to Pending state' })
+    @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    async setDeniedState(@Param('applicationId') applicationId: string): Promise<void> {
+        await this.applicationService.setDeniedState(applicationId);
     }
 
     @Post(':applicationId/set-invalid-state')
     @ApiOperation({ operationId: 'setInvalidState', summary: 'Set the application to Invalid state' })
     @ApiResponse({ status: 200, description: 'Application set to Invalid state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
     async setInvalidState(@Param('applicationId') applicationId: string, @Body() note: string): Promise<void> {
         await this.applicationService.setInvalidState(applicationId, note);
     }

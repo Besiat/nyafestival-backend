@@ -132,6 +132,18 @@ export class ApplicationService {
         await this.applicationRepository.update(application);
     }
 
+    async setAcceptedState(applicationId:string):Promise<void> {
+        const application = await this.applicationRepository.get(applicationId);
+        application.state = ApplicationState.Accepted;
+        await this.applicationRepository.update(application);
+    }
+
+    async setDeniedState(applicationId:string):Promise<void> {
+        const application = await this.applicationRepository.get(applicationId);
+        application.state = ApplicationState.Denied;
+        await this.applicationRepository.update(application);
+    }
+
     private async validateApplicationData(applicationData: ApplicationDataDTO[], fields: Field[]) {
         for (const field of fields) {
             const applicationDataItem = applicationData.find(appData => appData.fieldId === field.fieldId);

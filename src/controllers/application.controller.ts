@@ -47,7 +47,7 @@ export class ApplicationController {
     async setPendingState(@Param('applicationId') applicationId: string): Promise<void> {
         await this.applicationService.setPendingState(applicationId);
     }
-    
+
     @Post(':applicationId/accept')
     @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })
     @ApiResponse({ status: 200, description: 'Application set to Pending state' })
@@ -71,8 +71,8 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Application set to Invalid state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
-    async setInvalidState(@Param('applicationId') applicationId: string, @Body() note: string): Promise<void> {
-        await this.applicationService.setInvalidState(applicationId, note);
+    async setInvalidState(@Param('applicationId') applicationId: string, @Body() body: { note: string }): Promise<void> {
+        await this.applicationService.setInvalidState(applicationId, body.note);
     }
 
     @UseGuards(JwtAuthGuard)

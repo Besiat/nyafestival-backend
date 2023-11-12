@@ -23,7 +23,7 @@ export class ApplicationDataRepository {
     }
 
     async getByApplicationId(applicationId: string): Promise<ApplicationData[]> {
-        return this.applicationDataRepository.find({ where: { applicationId } })
+        return this.applicationDataRepository.find({ where: { applicationId }, relations: ['field'] })
     }
 
     async create(applicationData: Partial<ApplicationData>): Promise<ApplicationData> {

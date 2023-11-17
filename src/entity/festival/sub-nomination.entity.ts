@@ -21,4 +21,8 @@ export class SubNomination {
   @ApiProperty({ type: () => Application, isArray: true })
   @OneToMany(() => Application, (application) => application.subNomination)
   applications: Application[];
+
+  @ApiProperty()
+  @Column({ default: 0 })
+  order: number;
 }

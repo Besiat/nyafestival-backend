@@ -115,6 +115,7 @@ export class ApplicationService {
 
         application.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields);
         application.subNomination = subNomination;
+        application.state = 0;
         // Save the updated application
         await this.applicationRepository.update(application);
     }
@@ -122,6 +123,7 @@ export class ApplicationService {
     async setPendingState(applicationId: string): Promise<void> {
         const application = await this.applicationRepository.get(applicationId);
         application.state = ApplicationState.Pending;
+        application.adminNote = null;
         await this.applicationRepository.update(application);
     }
 

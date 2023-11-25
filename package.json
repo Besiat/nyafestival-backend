@@ -22,7 +22,6 @@
       "typeorm:generate": "yarn run typeorm migration:generate -d ./src/tools/data-source.ts",
       "typeorm:run": "yarn run typeorm migration:run -d ./src/tools/data-source.ts",
       "typeorm:revert": "yarn run typeorm migration:revert -d ./src/tools/data-source.ts"
-
    },
    "dependencies": {
       "@nestjs/common": "^10.0.0",
@@ -61,8 +60,8 @@
       "@types/jest": "^29.5.2",
       "@types/node": "^16.11.10",
       "@types/supertest": "^2.0.12",
-      "@typescript-eslint/eslint-plugin": "^6.0.0",
-      "@typescript-eslint/parser": "^6.0.0",
+      "@typescript-eslint/eslint-plugin": "^6.12.0",
+      "@typescript-eslint/parser": "^6.12.0",
       "eslint": "^8.42.0",
       "eslint-config-prettier": "^9.0.0",
       "eslint-plugin-prettier": "^5.0.0",

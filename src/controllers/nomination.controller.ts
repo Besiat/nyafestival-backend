@@ -1,15 +1,13 @@
 // nomination.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, BadRequestException } from '@nestjs/common';
 import { NominationService } from '../services/nomination.service';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { NominationPublicDTO } from '../dto/nomination-public.dto';
 import { randomUUID } from 'crypto';
-import { SubNominationPublicDTO } from '../dto/sub-nomination-public.dto';
-import { ApplicationPublicDTO } from '../dto/application-public.dto';
 
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
@@ -27,6 +25,7 @@ export class NominationController {
     @UseGuards(JwtAuthGuard, AdminGuard)
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations with applications' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
+    @ApiBearerAuth()
     async findAllWithNominations(): Promise<Nomination[]> {
         return (await this.nominationService.getAllNominationsWithApplications());
     }
@@ -74,6 +73,7 @@ export class NominationController {
     @ApiBody({ type: Nomination, description: 'Nomination data to create' })
     @ApiResponse({ status: 201, description: 'Creates a new nomination', type: Nomination })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async create(@Body() nominationData: Partial<Nomination>): Promise<Nomination> {
         return this.nominationService.createNomination(nominationData);
     }
@@ -84,6 +84,7 @@ export class NominationController {
     @ApiBody({ type: Nomination, description: 'Updated nomination data' })
     @ApiResponse({ status: 200, description: 'Updates a nomination by ID', type: Nomination })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async update(@Param('id') id: string, @Body() nomination: Nomination): Promise<Nomination | undefined> {
         return this.nominationService.updateNomination(nomination);
     }
@@ -93,6 +94,7 @@ export class NominationController {
     @ApiParam({ name: 'id', type: String, description: 'Nomination ID' })
     @ApiResponse({ status: 204, description: 'Deletes a nomination by ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async remove(@Param('id') id: string): Promise<void> {
         await this.nominationService.deleteNomination(id);
     }
@@ -104,6 +106,7 @@ export class NominationController {
     @ApiResponse({ status: 200, description: 'Adds a field to the nomination', type: Nomination })
     @ApiResponse({ status: 404, description: 'Nomination or field not found' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async addFieldToNomination(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,
@@ -124,6 +127,7 @@ export class NominationController {
     @ApiResponse({ status: 200, description: 'Removes a field from the nomination', type: Nomination })
     @ApiResponse({ status: 404, description: 'Nomination or field not found' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async removeFieldFromNomination(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,

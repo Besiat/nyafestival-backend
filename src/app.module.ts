@@ -44,67 +44,73 @@ import { NominationField } from './entity/festival/nomination-fields.entity';
 import { Config } from './entity/website/config.entity';
 import { ConfigService } from './services/config.service';
 import { ConfigController } from './controllers/config.controller';
+import { ScheduleController } from './controllers/schedule.controller';
+import { Block } from './entity/festival/block.entity';
+import { ScheduleItem } from './entity/festival/schedule-item.entity';
+import { ScheduleService } from './services/schedule.service';
 
-dotenv.config()
+dotenv.config();
 
 @Module({
-  imports: [
-    MulterModule.register({
-      storage: multer.diskStorage({
-        destination: `${process.env.UPLOAD_PATH}`,
-        filename: function (req, file, cb) {
-          var fileExt = file.originalname.split('.').pop();
-          const uid = new ShortUniqueId({ length: 10 }).rnd();
-          cb(null, `${uid}.${fileExt}`);
-        }
-      })
-    }),
-    JwtModule.register({
-      secret: `${process.env.TOKEN_SECRET}`,
-      signOptions: { expiresIn: '30d' },
-    }),
-    TypeOrmModule.forRootAsync({
-      useClass: DatabaseConfiguration
-    }),
-    TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config]),
-    ThrottlerModule.forRoot([{
-      ttl: 10000,
-      limit: 25,
-    }]),
-  ],
-  controllers: [
-    PagesController,
-    NominationController,
-    UserController,
-    FieldsController,
-    SubNominationController,
-    FileController,
-    ApplicationController,
-    ConfigController
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard
-    },
-    PageService,
-    PageRepository,
-    NominationService,
-    NominationRepository,
-    UserService,
-    UserRepository,
-    AuthService,
-    JwtStrategy,
-    EmailService,
-    FieldRepository,
-    FieldService,
-    SubNominationRepository,
-    SubNominationService,
-    FileService,
-    ApplicationService,
-    ApplicationRepository,
-    ApplicationDataRepository,
-    ConfigService],
+    imports: [
+        MulterModule.register({
+            storage: multer.diskStorage({
+                destination: `${process.env.UPLOAD_PATH}`,
+                filename: function (req, file, cb) {
+                    const fileExt = file.originalname.split('.').pop();
+                    const uid = new ShortUniqueId({ length: 10 }).rnd();
+                    cb(null, `${uid}.${fileExt}`);
+                }
+            })
+        }),
+        JwtModule.register({
+            secret: `${process.env.TOKEN_SECRET}`,
+            signOptions: { expiresIn: '30d' },
+        }),
+        TypeOrmModule.forRootAsync({
+            useClass: DatabaseConfiguration
+        }),
+        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem]),
+        ThrottlerModule.forRoot([{
+            ttl: 10000,
+            limit: 25,
+        }]),
+    ],
+    controllers: [
+        PagesController,
+        NominationController,
+        UserController,
+        FieldsController,
+        SubNominationController,
+        FileController,
+        ApplicationController,
+        ConfigController,
+        ScheduleController
+    ],
+    providers: [
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard
+        },
+        PageService,
+        PageRepository,
+        NominationService,
+        NominationRepository,
+        UserService,
+        UserRepository,
+        AuthService,
+        JwtStrategy,
+        EmailService,
+        FieldRepository,
+        FieldService,
+        SubNominationRepository,
+        SubNominationService,
+        FileService,
+        ApplicationService,
+        ApplicationRepository,
+        ApplicationDataRepository,
+        ConfigService,
+        ScheduleService],
 })
 export class AppModule {
 

@@ -5,20 +5,24 @@ import { ScheduleItem } from "./schedule-item.entity";
 @Entity()
 export class Block {
     @PrimaryGeneratedColumn('uuid')
-    blockId: string;
+        blockId: string;
 
     @Column()
-    name: string;
+        name: string;
+
+    @Column()
+        nominationId: string;
 
     @ManyToOne(() => Nomination)
     @JoinColumn({ name: 'nominationId' })
-    nomination: Nomination;
+        nomination: Nomination;
 
     @Column({ type: 'numeric' })
-    durationInSeconds: number;
+        durationInSeconds: number;
 
-    @OneToMany(()=>ScheduleItem, (scheduleItem)=>scheduleItem.block)
-    scheduleItems: ScheduleItem[]
+    @OneToMany(() => ScheduleItem, (scheduleItem) => scheduleItem.block)
+        scheduleItems: ScheduleItem[];
 
-    
+    @Column({ default: 0 })
+        order: number;
 }

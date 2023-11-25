@@ -16,15 +16,15 @@ export class NominationRepository {
 
     async getAllWithApplications(): Promise<Nomination[]> {
         const nominations = await this.nominationRepository
-          .createQueryBuilder('nomination')
-          .leftJoinAndSelect('nomination.subNominations', 'subNominations')
-          .leftJoinAndSelect('subNominations.applications', 'applications')
-          .orderBy('subNominations.order', 'ASC')
-          .addOrderBy('nomination.order', 'ASC')
-          .getMany();
-      
+            .createQueryBuilder('nomination')
+            .leftJoinAndSelect('nomination.subNominations', 'subNominations')
+            .leftJoinAndSelect('subNominations.applications', 'applications')
+            .orderBy('subNominations.order', 'ASC')
+            .addOrderBy('nomination.order', 'ASC')
+            .getMany();
+
         return nominations;
-      }
+    }
 
     async get(id: string): Promise<Nomination | undefined> {
         return await this.nominationRepository.findOne({

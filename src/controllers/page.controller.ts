@@ -1,29 +1,28 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { PageService } from '../services/page.service';
 import { Page } from '../entity/website/page.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
-import * as nodemailer from 'nodemailer';
 import { EmailService } from '../services/email.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/pages')
 @ApiTags('Pages') // Optional: Group your API under a tag
 export class PagesController {
-  constructor(private readonly pagesService: PageService, private readonly emailService: EmailService) { }
+    constructor(private readonly pagesService: PageService, private readonly emailService: EmailService) { }
   @Get()
   @ApiOperation({ operationId: 'findAll', summary: 'Get all pages' })
   @ApiResponse({ status: 200, description: 'Returns all pages', type: Page, isArray: true })
-  async findAll(): Promise<Page[]> {
-    return this.pagesService.getAllPages();
-  }
+    async findAll(): Promise<Page[]> {
+        return this.pagesService.getAllPages();
+    }
 
   @Get(':route')
   @ApiOperation({ operationId: 'findOne', summary: 'Get a page by route' })
   @ApiParam({ name: 'route', type: String, description: 'Page Route' })
   @ApiResponse({ status: 200, description: 'Returns a page by route', type: Page })
   async findOne(@Param('route') route: string): Promise<Page | undefined> {
-    return this.pagesService.getPageByRoute(route);
+      return this.pagesService.getPageByRoute(route);
   }
 
   @Post()
@@ -31,8 +30,9 @@ export class PagesController {
   @ApiBody({ type: Page, description: 'Page data to create' })
   @ApiResponse({ status: 201, description: 'Creates a new page', type: Page })
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   async create(@Body() pageData: Partial<Page>): Promise<Page> {
-    return this.pagesService.createPage(pageData);
+      return this.pagesService.createPage(pageData);
   }
 
   @Put(':id')
@@ -41,8 +41,9 @@ export class PagesController {
   @ApiBody({ type: Page, description: 'Updated page data' })
   @ApiResponse({ status: 200, description: 'Updates a page by ID', type: Page })
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   async update(@Param('id') id: string, @Body() pageData: Partial<Page>): Promise<Page | undefined> {
-    return this.pagesService.updatePage(id, pageData);
+      return this.pagesService.updatePage(id, pageData);
   }
 
   @Delete(':id')
@@ -50,7 +51,8 @@ export class PagesController {
   @ApiParam({ name: 'id', type: String, description: 'Page ID' })
   @ApiResponse({ status: 204, description: 'Deletes a page by ID' })
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   async remove(@Param('id') id: string): Promise<void> {
-    await this.pagesService.deletePage(id);
+      await this.pagesService.deletePage(id);
   }
 }

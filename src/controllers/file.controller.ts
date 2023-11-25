@@ -1,8 +1,7 @@
-import { Controller, Post, Delete, Param, UseInterceptors, UploadedFile, Body, Request, NotFoundException, ForbiddenException, UseGuards } from '@nestjs/common';
+import { Controller, Post, Delete, Param, UseInterceptors, UploadedFile, Request, NotFoundException, ForbiddenException, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { FileService } from '../services/file.service';
 import { ApplicationFile } from '../entity/website/application-file.entity';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
@@ -25,12 +24,13 @@ export class FileController {
     }
 
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     @Delete(':id')
     async deleteFile(@Param('id') fileId: string, @Request() req) {
         const userId = req.user.id; // Get the user ID from the JWT token payload
 
         try {
-            const deletedFile = await this.fileService.deleteFile(fileId, userId);
+            await this.fileService.deleteFile(fileId, userId);
             return { message: 'File deleted successfully' };
         } catch (err) {
             if (err instanceof NotFoundException) {

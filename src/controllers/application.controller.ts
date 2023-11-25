@@ -44,6 +44,7 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Application set to Pending state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async setPendingState(@Param('applicationId') applicationId: string): Promise<void> {
         await this.applicationService.setPendingState(applicationId);
     }
@@ -53,6 +54,7 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Application set to Pending state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async setAcceptedState(@Param('applicationId') applicationId: string): Promise<void> {
         await this.applicationService.setAcceptedState(applicationId);
     }
@@ -62,6 +64,7 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Application set to Pending state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async setDeniedState(@Param('applicationId') applicationId: string): Promise<void> {
         await this.applicationService.setDeniedState(applicationId);
     }
@@ -71,6 +74,7 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Application set to Invalid state' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async setInvalidState(@Param('applicationId') applicationId: string, @Body() body: { note: string }): Promise<void> {
         await this.applicationService.setInvalidState(applicationId, body.note);
     }
@@ -89,6 +93,7 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Data of the application', type: ApplicationData, isArray: true })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
     async getApplciationData(@Param('applicationId') applicationId: string): Promise<ApplicationData[]> {
         const applicationData = await this.applicationService.getApplicationData(applicationId);
         return applicationData;

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe, UseGuards, Request, Get, Res } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, UseGuards, Request, Get } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'; // Import Swagger decorators
 import { User } from '../entity/website/user';
 import { AuthService } from '../services/auth.service';
@@ -7,7 +7,6 @@ import { LoginDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ProfileDTO } from '../dto/profile.dto';
 import { Throttle } from '@nestjs/throttler';
-import { Application } from '../entity/festival/application.entity';
 import { UserService } from '../services/user.service';
 
 @ApiTags('Authentication')
@@ -22,7 +21,7 @@ export class UserController {
     @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiResponse({ status: 201, description: 'User registered successfully' })
     async register(@Body(ValidationPipe) registerDto: RegisterDto): Promise<{ message: string }> {
-        const user = await this.authService.register(registerDto);
+        await this.authService.register(registerDto);
         return { message: 'User registered successfully' };
     }
 
@@ -48,6 +47,7 @@ export class UserController {
     @Post('login-from-vk')
     @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiResponse({ status: 200, description: 'Login from VK successful', type: User })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     async loginFromVk(@Body() vkProfile: any, @Request() req): Promise<{ accessToken: string }> {
         // Use the findOrCreateUserFromVk function
         const user = await this.authService.findOrCreateUserFromVk(vkProfile);

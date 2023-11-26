@@ -89,7 +89,7 @@ export class ScheduleController {
         @Param('scheduleItemId') scheduleItemId: string,
         @Param('previousScheduleItemId') previousScheduleItemId?: string,
     ): Promise<void> {
-        if (previousScheduleItemId.trim()==='') previousScheduleItemId = undefined;
+        if (previousScheduleItemId.trim() === '') previousScheduleItemId = undefined;
         await this.scheduleService.moveScheduleItem(scheduleItemId, previousScheduleItemId);
     }
 
@@ -98,5 +98,18 @@ export class ScheduleController {
     @ApiResponse({ status: 200, description: 'Schedule', type: Block })
     async getSchedule(): Promise<Block[]> {
         return this.scheduleService.getSchedule();
+    }
+
+    @Put('update-block/:blockId')
+    @ApiOperation({ operationId: 'updateBlock', summary: 'Update a block' })
+    @ApiResponse({ status: 200, description: 'Updates a block' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
+    @ApiParam({ name: 'blockId', description: 'Block ID' })
+    async updateBlock(
+        @Param('blockId') blockId: string,
+        @Body() data: CreateBlockDTO,
+    ): Promise<void> {
+        await this.scheduleService.updateBlock(blockId, data.name, data.durationInSeconds);
     }
 }

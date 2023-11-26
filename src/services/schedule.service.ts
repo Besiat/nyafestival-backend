@@ -81,6 +81,18 @@ export class ScheduleService {
         }
     }
 
+    async updateBlock(blockId: string, name: string, durationInSeconds: number): Promise<void> {
+        const block = await this.getBlockById(blockId);
+        if (!block) {
+            throw new Error(`Block ${blockId} doesn't exist`);
+        }
+
+        block.name = name;
+        block.durationInSeconds = durationInSeconds;
+
+        await this.blockRepository.save(block);
+    }
+
     async moveScheduleItem(scheduleItemId: string, previousScheduleItemId?: string): Promise<void> {
         const scheduleItem = await this.getScheduleItemById(scheduleItemId);
         if (!scheduleItem) {

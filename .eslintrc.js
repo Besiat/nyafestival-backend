@@ -30,10 +30,6 @@ module.exports = {
 		"@typescript-eslint"
 	],
 	"rules": {
-		"linebreak-style": [
-			"error",
-			"windows"
-		],
 		"semi": [
 			"error",
 			"always"

@@ -8,6 +8,9 @@ export class Application {
   @PrimaryGeneratedColumn('uuid')
   applicationId: string;
 
+  @Column()
+  subNominationId: string;
+
   @ManyToOne(() => SubNomination, (subNomination) => subNomination.applications)
   @JoinColumn({ name: 'subNominationId' })
   subNomination: SubNomination;

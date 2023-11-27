@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class ApplicationFileMigration1697651640892 implements MigrationInterface {
-    name = 'ApplicationFileMigration1697651640892'
+    name = 'ApplicationFileMigration1697651640892';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`ALTER TABLE "application" DROP CONSTRAINT "FK_d8ea023faf3ca5d74baaf201bf1"`);

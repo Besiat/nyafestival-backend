@@ -48,6 +48,9 @@ import { ScheduleController } from './controllers/schedule.controller';
 import { Block } from './entity/festival/block.entity';
 import { ScheduleItem } from './entity/festival/schedule-item.entity';
 import { ScheduleService } from './services/schedule.service';
+import { VotingService } from './services/voting.service';
+import { VotingController } from './controllers/voting.controller';
+import { Vote } from './entity/festival/vote.entity';
 
 dotenv.config();
 
@@ -70,7 +73,7 @@ dotenv.config();
         TypeOrmModule.forRootAsync({
             useClass: DatabaseConfiguration
         }),
-        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem]),
+        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote]),
         ThrottlerModule.forRoot([{
             ttl: 10000,
             limit: 25,
@@ -85,7 +88,8 @@ dotenv.config();
         FileController,
         ApplicationController,
         ConfigController,
-        ScheduleController
+        ScheduleController,
+        VotingController
     ],
     providers: [
         {
@@ -110,7 +114,8 @@ dotenv.config();
         ApplicationRepository,
         ApplicationDataRepository,
         ConfigService,
-        ScheduleService],
+        ScheduleService,
+        VotingService],
 })
 export class AppModule {
 

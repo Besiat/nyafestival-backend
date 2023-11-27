@@ -88,6 +88,16 @@ export class ApplicationController {
         return applications;
     }
 
+    @Get()
+    @ApiOperation({ operationId: 'getAllApplications', summary: 'Returns all applications' })
+    @ApiResponse({ status: 200, description: 'Applications', type: Application, isArray: true })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
+    async getAllApplications(): Promise<Application[]> {
+        const applications = await this.applicationService.getApplications();
+        return applications;
+    }
+
     @Get(':applicationId/applicationData')
     @ApiOperation({ operationId: 'getApplicationData', summary: 'Returns all data of the application' })
     @ApiResponse({ status: 200, description: 'Data of the application', type: ApplicationData, isArray: true })

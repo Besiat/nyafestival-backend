@@ -10,7 +10,7 @@ export class ApplicationRepository {
     ) { }
 
     async getAll(): Promise<Application[]> {
-        return await this.applicationRepository.find({ relations: ['applicationData'] });
+        return await this.applicationRepository.find({ relations: ['applicationData', 'applicationData.field'] });
     }
 
     async get(id: string): Promise<Application | undefined> {

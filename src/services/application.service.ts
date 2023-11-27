@@ -46,7 +46,7 @@ export class ApplicationService {
             throw new BadRequestException("User is empty");
         }
 
-        const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);;
+        const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
         await this.validateApplicationData(application.applicationData, fields);
 
@@ -55,7 +55,7 @@ export class ApplicationService {
         for (const appData of application.applicationData) {
             const field = fields.find(f => f.fieldId === appData.fieldId);
 
-            await this.createApplicationData(savedApplication, appData, field);
+            await this.createApplicationData(savedApplication, appData);
 
             if ((field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) && !!appData.value) {
                 await this.fileService.saveApplicationId(appData.value, savedApplication.applicationId);
@@ -100,7 +100,7 @@ export class ApplicationService {
 
             if (existingAppData) {
                 existingAppData.value = updatedAppData.value;
-                this.applicationDataRepository.update(existingAppData);
+                await this.applicationDataRepository.update(existingAppData);
             }
             else {
                 const newAppData = new ApplicationData();
@@ -111,7 +111,7 @@ export class ApplicationService {
             }
         }
 
-        const dtos = application.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value } });
+        const dtos = application.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value }; });
 
         application.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields);
         application.subNomination = subNomination;
@@ -205,7 +205,7 @@ export class ApplicationService {
         }
     }
 
-    private async createApplicationData(savedApplication, appData, field) {
+    private async createApplicationData(savedApplication, appData) {
         const newAppData = new ApplicationData();
         newAppData.application = savedApplication;
         newAppData.fieldId = appData.fieldId;

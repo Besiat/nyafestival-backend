@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Vote } from "../entity/festival/vote.entity";
 import { Repository } from "typeorm";
 import { VoteDTO } from "../dto/vote.dto";
-import { Application } from "../entity/festival/application.entity";
+import { Application, ApplicationState } from "../entity/festival/application.entity";
 import { PhotocosplayDTO } from "../dto/photocosplay.dto";
 import { VotingSummaryDTO } from "../dto/voting-summary.dto";
 
@@ -40,7 +40,7 @@ export class VotingService {
     }
 
     async getVotesForUser(userId: string | null): Promise<PhotocosplayDTO[]> {
-        const applications = await this.applicationRepository.find({ where: { subNominationId: '45841f7c-222e-4947-b6b7-209d69bb2611' }, relations: ['applicationData', 'applicationData.field'] });
+        const applications = await this.applicationRepository.find({ where: { subNominationId: '45841f7c-222e-4947-b6b7-209d69bb2611', state:ApplicationState.Accepted }, relations: ['applicationData', 'applicationData.field'] });
         const photocosplayDTOs: PhotocosplayDTO[] = [];
         for (const application of applications) {
             let photocosplayDTO = photocosplayDTOs.find(res => res.applicationId === application.applicationId);
@@ -61,7 +61,7 @@ export class VotingService {
 
     async getVotesSummary(): Promise<VotingSummaryDTO[]> {
         const votes = await this.voteRepository.find();
-        const applications = await this.applicationRepository.find({ where: { subNominationId: '45841f7c-222e-4947-b6b7-209d69bb2611' }, relations: ['applicationData', 'applicationData.field'] });
+        const applications = await this.applicationRepository.find({ where: { subNominationId: '45841f7c-222e-4947-b6b7-209d69bb2611', state:ApplicationState.Accepted }, relations: ['applicationData', 'applicationData.field'] });
         const votingSummaryDTOs: VotingSummaryDTO[] = [];
         for (const application of applications) {
             let votingSummaryDTO = votingSummaryDTOs.find(res => res.applicationId === application.applicationId);

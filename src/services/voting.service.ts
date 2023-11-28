@@ -39,8 +39,7 @@ export class VotingService {
         await this.voteRepository.save(vote);
     }
 
-    async getVotesForUser(userId: string): Promise<PhotocosplayDTO[]> {
-        const votes = await this.voteRepository.find({ where: { userId } });
+    async getVotesForUser(userId: string | null): Promise<PhotocosplayDTO[]> {
         const applications = await this.applicationRepository.find({ where: { subNominationId: '45841f7c-222e-4947-b6b7-209d69bb2611' }, relations: ['applicationData', 'applicationData.field'] });
         const photocosplayDTOs: PhotocosplayDTO[] = [];
         for (const application of applications) {
@@ -50,8 +49,11 @@ export class VotingService {
                 photocosplayDTOs.push(photocosplayDTO);
             }
 
-            const applicationVote = votes.find(vote => vote.applicationId === application.applicationId);
-            photocosplayDTO.rating = applicationVote?.rating ?? 0;
+            if (userId) {
+                const votes = await this.voteRepository.find({ where: { userId } });
+                const applicationVote = votes.find(vote => vote.applicationId === application.applicationId);
+                photocosplayDTO.rating = applicationVote?.rating ?? 0;
+            }
         }
 
         return photocosplayDTOs;

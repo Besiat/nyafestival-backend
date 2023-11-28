@@ -6,6 +6,8 @@ import { VoteDTO } from '../dto/vote.dto';
 import { PhotocosplayDTO } from '../dto/photocosplay.dto';
 import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { VotingSummaryDTO } from '../dto/voting-summary.dto';
+import { jwtDecode } from "jwt-decode";
+
 
 @Controller('api/voting')
 @ApiTags('Voting')
@@ -34,10 +36,17 @@ export class VotingController {
     @Get('getVotesForUser')
     @ApiOperation({ summary: 'Get all votes for current user' })
     @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard, AdminGuard)
     @ApiResponse({ status: 200, description: 'Returns all votes for user', type: [PhotocosplayDTO] })
     async getVotesForUser(@Request() req): Promise<PhotocosplayDTO[]> {
-        const userId = req.user.userId;
+        const token = req.headers.authorization;
+        let userId: string = null;
+        if (token) {
+            const decoded = jwtDecode(token.split(' ')[1]);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            userId = (decoded as any).userId;
+        }
+
+        console.log(userId);
         return this.votingService.getVotesForUser(userId);
     }
 }

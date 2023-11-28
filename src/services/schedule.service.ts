@@ -15,7 +15,7 @@ export class ScheduleService {
     async createScheduleItem(applicationId: string, blockId: string): Promise<void> {
         const application = await this.applicationRepository.findOne({ where: { applicationId } });
         if (!application) throw new Error(`Application ${applicationId} doesn't exist`);
-        const alreadyExists = this.scheduleItemsRepository.findOne({ where: { applicationId } });
+        const alreadyExists = await this.scheduleItemsRepository.findOne({ where: { applicationId } });
         if (alreadyExists) throw new Error(`Schedule item for application ${applicationId} already exists`);
         const maxOrder = await this.scheduleItemsRepository.maximum("order", { blockId });
         const newScheduleItem = this.scheduleItemsRepository.create();

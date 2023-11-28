@@ -5,6 +5,7 @@ import { VotingService } from '../services/voting.service';
 import { VoteDTO } from '../dto/vote.dto';
 import { PhotocosplayDTO } from '../dto/photocosplay.dto';
 import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { VotingSummaryDTO } from '../dto/voting-summary.dto';
 
 @Controller('api/voting')
 @ApiTags('Voting')
@@ -25,8 +26,18 @@ export class VotingController {
     @ApiOperation({ summary: 'Get all votes (Admin only)' })
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, AdminGuard)
-    @ApiResponse({ status: 200, description: 'Returns all votes', type: [PhotocosplayDTO] })
-    async getVotes(): Promise<PhotocosplayDTO[]> {
-        return this.votingService.getVotes();
+    @ApiResponse({ status: 200, description: 'Returns all votes', type: [VotingSummaryDTO] })
+    async getVotes(): Promise<VotingSummaryDTO[]> {
+        return this.votingService.getVotesSummary();
+    }
+
+    @Get('getVotesForUser')
+    @ApiOperation({ summary: 'Get all votes for current user' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiResponse({ status: 200, description: 'Returns all votes for user', type: [PhotocosplayDTO] })
+    async getVotesForUser(@Request() req): Promise<PhotocosplayDTO[]> {
+        const userId = req.user.userId;
+        return this.votingService.getVotesForUser(userId);
     }
 }

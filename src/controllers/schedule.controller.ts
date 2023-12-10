@@ -1,4 +1,4 @@
-import { Controller, Post, Delete, Put, Body, Param, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Delete, Put, Body, Param, UseGuards, Get, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { AdminGuard } from '../guards/admin-guard';
 import { ScheduleService } from '../services/schedule.service';
@@ -6,6 +6,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@ne
 import { Block } from '../entity/festival/block.entity';
 import { CreateScheduleItemDTO } from '../dto/create-schedule-item.dto';
 import { CreateBlockDTO } from '../dto/create-block.dto';
+import { jwtDecode } from 'jwt-decode';
+import { BlockForScheduleItemForUserDTO } from '../dto/block-for-schedule-item-for-user.dto';
 
 @Controller('api/schedule')
 @ApiTags('Schedule')
@@ -95,9 +97,17 @@ export class ScheduleController {
 
     @Get()
     @ApiOperation({ operationId: 'getSchedule', summary: 'Returns full ordered schedule' })
-    @ApiResponse({ status: 200, description: 'Schedule', type: Block })
-    async getSchedule(): Promise<Block[]> {
-        return this.scheduleService.getSchedule();
+    @ApiBearerAuth()
+    @ApiResponse({ status: 200, description: 'Schedule', type: BlockForScheduleItemForUserDTO })
+    async getSchedule(@Request() req): Promise<Block[]> {
+        const token = req.headers.authorization;
+        let userId: string = null;
+        if (token) {
+            const decoded = jwtDecode(token.split(' ')[1]);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            userId = (decoded as any).userId;
+        }
+        return this.scheduleService.getSchedule(userId);
     }
 
     @Put('update-block/:blockId')

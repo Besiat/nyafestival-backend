@@ -4,12 +4,16 @@ import { ScheduleItem } from '../entity/festival/schedule-item.entity';
 import { Application } from '../entity/festival/application.entity';
 import { MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Block } from '../entity/festival/block.entity';
+import { BlockForScheduleItemForUserDTO } from '../dto/block-for-schedule-item-for-user.dto';
+import { StageVote } from '../entity/festival/stage-vote.entity';
+import { ScheduleItemForUserDTO } from '../dto/schedule-item-for-user.dto';
 
 @Injectable()
 export class ScheduleService {
     constructor(@InjectRepository(ScheduleItem) private readonly scheduleItemsRepository: Repository<ScheduleItem>,
         @InjectRepository(Block) private readonly blockRepository: Repository<Block>,
-        @InjectRepository(Application) private readonly applicationRepository: Repository<Application>) {
+        @InjectRepository(Application) private readonly applicationRepository: Repository<Application>,
+        @InjectRepository(StageVote) private readonly stageVoteRepository: Repository<StageVote>) {
     }
 
     async createScheduleItem(applicationId: string, blockId: string): Promise<void> {
@@ -30,15 +34,47 @@ export class ScheduleService {
         await this.scheduleItemsRepository.delete(scheduleItemId);
     }
 
-    async getSchedule(): Promise<Block[]> {
-        const blocks = this.blockRepository.createQueryBuilder('block')
+    async getSchedule(userId?: string): Promise<BlockForScheduleItemForUserDTO[]> {
+        const blocks = await this.blockRepository.createQueryBuilder('block')
             .leftJoinAndSelect('block.scheduleItems', 'scheduleItems')
             .orderBy('scheduleItems.order')
             .addOrderBy('block.order')
             .getMany();
 
-        return blocks;
+        const likes = await this.stageVoteRepository.find();
+        const blockDTOs = [] as BlockForScheduleItemForUserDTO[];
+        for (const block of blocks)
+        {
+            const blockDTO = new BlockForScheduleItemForUserDTO();
+            blockDTO.blockId = block.blockId;
+            blockDTO.durationInSeconds = block.durationInSeconds;
+            blockDTO.name = block.name;
+            blockDTO.nomination = block.nomination;
+            blockDTO.nominationId = block.nominationId;
+            blockDTO.order = block.order;
+            const scheduleItemDTOs = [] as ScheduleItemForUserDTO[];
+            for (const scheduleItem of block.scheduleItems)
+            {
+                const scheduleItemDTO = new ScheduleItemForUserDTO();
+                scheduleItemDTO.applicationId = scheduleItem.applicationId;
+                //scheduleItemDTO.block = blockDTO;
+                scheduleItemDTO.blockId = block.blockId;
+                scheduleItemDTO.name = scheduleItem.name;
+                scheduleItemDTO.order = scheduleItem.order;
+                scheduleItemDTO.scheduleItemId = scheduleItem.scheduleItemId;
+                if (userId) {
+                    scheduleItemDTO.liked = likes.find(vote=>vote.userId===userId && vote.applicationId===scheduleItem.applicationId) !== undefined;
+                }
+                scheduleItemDTOs.push(scheduleItemDTO);
+            }
+            blockDTO.scheduleItems = scheduleItemDTOs;
+            blockDTOs.push(blockDTO);
+        }
+
+        return blockDTOs;
     }
+
+
 
     async moveScheduleItemToAnotherBlock(scheduleItemId: string, blockId: string): Promise<void> {
         const scheduleItem = await this.scheduleItemsRepository.findOne({ where: { scheduleItemId } });

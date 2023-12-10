@@ -6,11 +6,14 @@ import { VoteDTO } from "../dto/vote.dto";
 import { Application, ApplicationState } from "../entity/festival/application.entity";
 import { PhotocosplayDTO } from "../dto/photocosplay.dto";
 import { VotingSummaryDTO } from "../dto/voting-summary.dto";
+import { StageVote } from "../entity/festival/stage-vote.entity";
+import { StageVoteSummaryDTO } from "../dto/stage-vote-summary.dto";
 
 @Injectable()
 export class VotingService {
     constructor(@InjectRepository(Vote) private readonly voteRepository: Repository<Vote>,
-        @InjectRepository(Application) private readonly applicationRepository: Repository<Application>) { }
+        @InjectRepository(Application) private readonly applicationRepository: Repository<Application>,
+        @InjectRepository(StageVote) private readonly stageVoteRepository: Repository<StageVote>) { }
 
     async vote(userId: string, voteDto: VoteDTO) {
         const { applicationId, rating } = voteDto;
@@ -76,6 +79,28 @@ export class VotingService {
         }
 
         return votingSummaryDTOs;
+    }
+
+    async toggleStageVote(applicationId: string, userId: string) : Promise<void>
+    {
+        const existingVote = await this.stageVoteRepository.findOne({where:{applicationId,userId}});
+
+        if (existingVote) {
+          await this.stageVoteRepository.delete(existingVote);
+        } else {
+          const newVote =  this.stageVoteRepository.create({ applicationId, userId });
+          await  this.stageVoteRepository.save(newVote);
+        }
+    }
+
+    async getStageVoteSummary() : Promise<StageVoteSummaryDTO[]> {
+        const voteResults = await this.stageVoteRepository
+        .createQueryBuilder('stageVote')
+        .select('"applicationId", COUNT("userId") as voteCount')
+        .groupBy('"applicationId"')
+        .getRawMany() as StageVoteSummaryDTO[];
+    
+      return voteResults;
     }
 
     private getPhotocosplayDTO(application: Application): PhotocosplayDTO {

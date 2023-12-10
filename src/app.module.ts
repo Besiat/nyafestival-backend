@@ -51,6 +51,7 @@ import { ScheduleService } from './services/schedule.service';
 import { VotingService } from './services/voting.service';
 import { VotingController } from './controllers/voting.controller';
 import { Vote } from './entity/festival/vote.entity';
+import { StageVote } from './entity/festival/stage-vote.entity';
 
 dotenv.config();
 
@@ -73,7 +74,7 @@ dotenv.config();
         TypeOrmModule.forRootAsync({
             useClass: DatabaseConfiguration
         }),
-        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote]),
+        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote, StageVote]),
         ThrottlerModule.forRoot([{
             ttl: 10000,
             limit: 25,

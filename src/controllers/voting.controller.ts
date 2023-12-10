@@ -1,4 +1,4 @@
-import { Controller, Post, Get, UseGuards, Request, Body } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Request, Body, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { AdminGuard } from '../guards/admin-guard';
 import { VotingService } from '../services/voting.service';
@@ -7,6 +7,7 @@ import { PhotocosplayDTO } from '../dto/photocosplay.dto';
 import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { VotingSummaryDTO } from '../dto/voting-summary.dto';
 import { jwtDecode } from "jwt-decode";
+import { StageVoteSummaryDTO } from '../dto/stage-vote-summary.dto';
 
 
 @Controller('api/voting')
@@ -48,5 +49,23 @@ export class VotingController {
 
         console.log(userId);
         return this.votingService.getVotesForUser(userId);
+    }
+
+    @Post('toggleVote/:applicationId')
+    @ApiOperation({ summary: 'Toggle vote for a stage application' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    async toggleVote(@Request() req, @Param('applicationId') applicationId: string): Promise<void> {
+        const userId = req.user.userId;
+        await this.votingService.toggleStageVote(applicationId, userId);
+    }
+
+    @Get('getStageVoteSummary')
+    @ApiOperation({ summary: 'Get stage vote summary (Admin only)' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiResponse({ status: 200, description: 'Returns stage vote summary', type: [StageVoteSummaryDTO] })
+    async getStageVoteSummary(): Promise<StageVoteSummaryDTO[]> {
+        return this.votingService.getStageVoteSummary();
     }
 }

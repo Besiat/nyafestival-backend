@@ -139,4 +139,26 @@ export class NominationController {
             throw new BadRequestException(error.message);
         }
     }
+
+    @Put(':nominationId/add-field/:fieldId/:order')
+    @ApiOperation({ operationId: 'updateFieldOrderInNomination', summary: 'Update field order in Nomination' })
+    @ApiParam({ name: 'nominationId', type: String, description: 'Nomination ID' })
+    @ApiParam({ name: 'fieldId', type: String, description: 'Field ID' })
+    @ApiParam({ name: 'order', type: Number, description: 'order' })
+    @ApiResponse({ status: 200, description: 'Order is updated', type: Nomination })
+    @ApiResponse({ status: 404, description: 'Nomination or field not found' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
+    async updateFieldOrder(
+        @Param('nominationId') nominationId: string,
+        @Param('fieldId') fieldId: string,
+        @Param('order') order: number
+    ): Promise<Nomination | undefined> {
+        try {
+            await this.nominationService.updateFieldOrder(nominationId, fieldId, order);
+            return this.nominationService.getNominationById(nominationId);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
 }

@@ -18,6 +18,10 @@ export class SubNomination {
   @Column()
   name: string;
 
+  @Column({nullable: true})
+  @ApiProperty({ type: String, description: 'Short code for the nomination' })
+  code:string;
+
   @ApiProperty({ type: () => Application, isArray: true })
   @OneToMany(() => Application, (application) => application.subNomination)
   applications: Application[];

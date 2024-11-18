@@ -3,8 +3,8 @@ import { JwtAuthGuard } from '../guards/jwt-guard';
 import { AdminGuard } from '../guards/admin-guard';
 import { VotingService } from '../services/voting.service';
 import { VoteDTO } from '../dto/vote.dto';
-import { PhotocosplayDTO } from '../dto/photocosplay.dto';
-import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { VoteViewDTO } from '../dto/vote-view.dto';
+import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { VotingSummaryDTO } from '../dto/voting-summary.dto';
 import { jwtDecode } from "jwt-decode";
 import { StageVoteSummaryDTO } from '../dto/stage-vote-summary.dto';
@@ -25,20 +25,22 @@ export class VotingController {
         await this.votingService.vote(userId, voteDto);
     }
 
-    @Get('getVotes')
+    @Get('getVotes/:subNominationCode')
     @ApiOperation({ summary: 'Get all votes (Admin only)' })
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiParam({ name: 'subNominationCode', required: true })
     @ApiResponse({ status: 200, description: 'Returns all votes', type: [VotingSummaryDTO] })
-    async getVotes(): Promise<VotingSummaryDTO[]> {
-        return this.votingService.getVotesSummary();
+    async getVotes(@Param('subNominationCode') subNominationCode: string): Promise<VotingSummaryDTO[]> {
+        return this.votingService.getVotesSummary(subNominationCode);
     }
 
-    @Get('getVotesForUser')
+    @Get('getVotesForUser/:subNominationCode')
     @ApiOperation({ summary: 'Get all votes for current user' })
     @ApiBearerAuth()
-    @ApiResponse({ status: 200, description: 'Returns all votes for user', type: [PhotocosplayDTO] })
-    async getVotesForUser(@Request() req): Promise<PhotocosplayDTO[]> {
+    @ApiParam({ name: 'subNominationCode', required: true })
+    @ApiResponse({ status: 200, description: 'Returns all votes for user', type: [VoteViewDTO] })
+    async getVotesForUser(@Request() req, @Param('subNominationCode') subNominationCode: string): Promise<VoteViewDTO[]> {
         const token = req.headers.authorization;
         let userId: string = null;
         if (token) {
@@ -48,7 +50,7 @@ export class VotingController {
         }
 
         console.log(userId);
-        return this.votingService.getVotesForUser(userId);
+        return this.votingService.getVotesForUser(subNominationCode, userId);
     }
 
     @Post('toggleVote/:applicationId')

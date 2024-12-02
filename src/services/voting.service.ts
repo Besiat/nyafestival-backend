@@ -16,16 +16,16 @@ export class VotingService {
     constructor(
         @InjectRepository(Vote)
         private readonly voteRepository: Repository<Vote>,
-        
+
         @InjectRepository(Application)
         private readonly applicationRepository: Repository<Application>,
-        
+
         @InjectRepository(StageVote)
         private readonly stageVoteRepository: Repository<StageVote>,
-        
+
         @InjectRepository(SubNomination)
         private readonly subNominationRepository: Repository<SubNomination>
-    ) {}
+    ) { }
 
     async vote(userId: string, voteDto: VoteDTO): Promise<void> {
         const { applicationId, rating } = voteDto;
@@ -71,7 +71,7 @@ export class VotingService {
             relations: ['applicationData', 'applicationData.field'],
         });
 
-        const voteViewDTOs: VoteViewDTO[] = applications.map(application => this.getVoteViewDTO(application));
+        const voteViewDTOs: VoteViewDTO[] = applications.map(application => this.getVoteViewDTO(application, subNominationCode));
 
         if (userId) {
             const userVotes = await this.voteRepository.find({
@@ -146,17 +146,20 @@ export class VotingService {
         return NOMINATION_PUBLIC_FIELDS_FOR_VOTING.some(nomination => nomination.code === subNominationCode);
     }
 
-    private getVoteViewDTO(application: Application): VoteViewDTO {
+    private getVoteViewDTO(application: Application, subNominationCode: string): VoteViewDTO {
         return {
             applicationId: application.applicationId,
-            fields: this.mapApplicationDataToRecord(application.applicationData),
+            fields: this.mapApplicationDataToRecord(application.applicationData, subNominationCode),
             rating: 0,
         };
     }
 
-    private mapApplicationDataToRecord(applicationData: { field: { code: string }, value: string }[]): Record<string, string> {
+    private mapApplicationDataToRecord(applicationData: { field: { code: string }, value: string }[], subNominationCode: string): Record<string, string> {
         return applicationData.reduce<Record<string, string>>((acc, data) => {
-            acc[data.field.code] = data.value;
+            const fields = NOMINATION_PUBLIC_FIELDS_FOR_VOTING.find(nomination => nomination.code === subNominationCode)?.fields;
+            if (fields && fields.includes(data.field.code)) {
+                acc[data.field.code] = data.value;
+            }
             return acc;
         }, {});
     }

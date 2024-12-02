@@ -19,7 +19,7 @@ export class FileService {
 
   async getByFileName(fileName: string) : Promise<ApplicationFile | undefined> {
     const file = await this.fileRepository.findOne({ where: { fileName: fileName } });
-    return file
+    return file;
   }
 
   async saveApplicationId(fileName: string, applicationId: string): Promise<void> {

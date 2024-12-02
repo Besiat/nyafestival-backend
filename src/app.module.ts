@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { PagesController } from './controllers/page.controller';
 import { PageService } from './services/page.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -52,6 +52,11 @@ import { VotingService } from './services/voting.service';
 import { VotingController } from './controllers/voting.controller';
 import { Vote } from './entity/festival/vote.entity';
 import { StageVote } from './entity/festival/stage-vote.entity';
+import { Ticket } from './entity/festival/ticket.entity';
+import { UserQuestProgress } from './entity/festival/user-quest.entity';
+import { TicketsController } from './controllers/tickets.controller';
+import { TicketService } from './services/ticket.service';
+import { TicketRepository } from './repositories/ticket.repository';
 
 dotenv.config();
 
@@ -74,10 +79,10 @@ dotenv.config();
         TypeOrmModule.forRootAsync({
             useClass: DatabaseConfiguration
         }),
-        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote, StageVote]),
+        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote, StageVote, Ticket, UserQuestProgress]),
         ThrottlerModule.forRoot([{
-            ttl: 10000,
-            limit: 25,
+            ttl: 1000,
+            limit: 50,
         }]),
     ],
     controllers: [
@@ -90,7 +95,8 @@ dotenv.config();
         ApplicationController,
         ConfigController,
         ScheduleController,
-        VotingController
+        VotingController,
+        TicketsController
     ],
     providers: [
         {
@@ -116,8 +122,10 @@ dotenv.config();
         ApplicationDataRepository,
         ConfigService,
         ScheduleService,
-        VotingService],
+        VotingService,
+        TicketRepository,
+        TicketService],
 })
 export class AppModule {
-
+    
 }

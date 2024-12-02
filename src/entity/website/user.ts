@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm"
 import { Application } from "../festival/application.entity"
 import { IsEmail, IsNotEmpty } from "class-validator";
+import { Ticket } from "../festival/ticket.entity";
 
 @Entity()
 export class User {
@@ -36,4 +37,6 @@ export class User {
     @Column('bool')
     confirmed: boolean;
 
+    @OneToMany(()=> Ticket, ticket => ticket.user)
+    tickets?: Ticket[];
 }

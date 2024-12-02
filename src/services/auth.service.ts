@@ -1,12 +1,12 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from './user.service';
-import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../dto/register.dto';
 import { randomUUID } from 'crypto';
 import { User } from '../entity/website/user';
 import { EmailService } from './email.service';
 import { LoginDto } from '../dto/login.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -48,7 +48,7 @@ export class AuthService {
             confirmed: false
         });
 
-        this.emailService.sendConfirmationEmail(registerDto.email, emailConfirmationToken);
+        await this.emailService.sendConfirmationEmail(registerDto.email, emailConfirmationToken);
     }
 
     async login(user: any) {
@@ -97,6 +97,6 @@ export class AuthService {
             .match(
                 /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             );
-    };
+    }
 }
 

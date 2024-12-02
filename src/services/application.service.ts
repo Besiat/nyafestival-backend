@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, Logger } from "@nestjs/common";
 import { promises as fsPromises } from "fs";
 import { Application } from "../entity/festival/application.entity";
 import { ApplicationData } from "../entity/festival/application-data.entity";
@@ -32,7 +32,7 @@ export class ApplicationService {
         return this.applicationRepository.getByUserId(userId);
     }
 
-    async getApplicationData(applicationId:string) : Promise<ApplicationData[]> {
+    async getApplicationData(applicationId: string): Promise<ApplicationData[]> {
         return this.applicationDataRepository.getByApplicationId(applicationId);
     }
 
@@ -58,7 +58,11 @@ export class ApplicationService {
             await this.createApplicationData(savedApplication, appData);
 
             if ((field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) && !!appData.value) {
-                await this.fileService.saveApplicationId(appData.value, savedApplication.applicationId);
+                try {
+                    await this.fileService.saveApplicationId(appData.value, savedApplication.applicationId);
+                } catch (err) {
+                    Logger.error(`Error saving file: ${err}`);
+                }
             }
         }
     }
@@ -134,13 +138,13 @@ export class ApplicationService {
         await this.applicationRepository.update(application);
     }
 
-    async setAcceptedState(applicationId:string):Promise<void> {
+    async setAcceptedState(applicationId: string): Promise<void> {
         const application = await this.applicationRepository.get(applicationId);
         application.state = ApplicationState.Accepted;
         await this.applicationRepository.update(application);
     }
 
-    async setDeniedState(applicationId:string):Promise<void> {
+    async setDeniedState(applicationId: string): Promise<void> {
         const application = await this.applicationRepository.get(applicationId);
         application.state = ApplicationState.Denied;
         await this.applicationRepository.update(application);

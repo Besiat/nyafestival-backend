@@ -19,4 +19,16 @@ export class TicketRepository
         const newTickets = this.ticketRepository.create(tickets);
         return await this.ticketRepository.save(newTickets);
     }
+
+    async updateTicket(ticket: Ticket): Promise<Ticket> {
+        return await this.ticketRepository.save(ticket);
+    }
+
+    async getTicketByUser(userId: string): Promise<Ticket> {
+        return await this.ticketRepository.findOne({ where: { userId } });
+    }
+
+    async deleteTicketsByUser(userId: string): Promise<void> {
+        await this.ticketRepository.delete({ userId });
+    }
 }

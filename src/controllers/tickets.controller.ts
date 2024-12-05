@@ -1,4 +1,4 @@
-import { Controller, Headers, Logger, Post, Req, Res, HttpException, HttpStatus, RawBodyRequest, UseInterceptors, UploadedFile, UseGuards } from "@nestjs/common";
+import { Controller, Headers, Logger, Post, Res, HttpException, HttpStatus, RawBodyRequest, UseInterceptors, UploadedFile, UseGuards, Param, Req, Body, Get } from "@nestjs/common";
 import { Response } from "express";
 import { TicketService } from "../services/ticket.service";
 import { QticketsHookDataDto } from "../dto/qtickets-hook-data.dto";
@@ -7,13 +7,20 @@ import { createReadStream } from "fs";
 import * as csv from 'csv-parser';
 import { JwtAuthGuard } from "../guards/jwt-guard";
 import { AdminGuard } from "../guards/admin-guard";
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { AssignTicketToUserDto } from "../dto/assign-ticket-to-user.dto";
 
+@ApiTags('tickets')
 @Controller('api/tickets')
 export class TicketsController {
     private readonly logger = new Logger(TicketsController.name);
 
     constructor(private readonly ticketService: TicketService) { }
 
+    @ApiOperation({ summary: 'Create a ticket from qtickets webhook' })
+    @ApiResponse({ status: 200, description: 'Ticket created' })
+    @ApiResponse({ status: 400, description: 'Invalid payload' })
+    @ApiResponse({ status: 500, description: 'Internal server error' })
     @Post('qtickets_hook')
     async createTicket(
         @Req() req: RawBodyRequest<Request>,
@@ -47,6 +54,13 @@ export class TicketsController {
         }
     }
 
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Upload tickets via CSV file' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ description: 'CSV file containing tickets', type: 'multipart/form-data' })
+    @ApiResponse({ status: 201, description: 'Tickets uploaded successfully' })
+    @ApiResponse({ status: 400, description: 'No file uploaded' })
+    @ApiResponse({ status: 500, description: 'Error processing CSV' })
     @Post('upload_csv')
     @UseInterceptors(FileInterceptor('file'))
     @UseGuards(JwtAuthGuard, AdminGuard)
@@ -64,7 +78,7 @@ export class TicketsController {
                     .pipe(csv())
                     .on('data', (row) => {
                         tickets.push({
-                            ticketNumber: row['Номер билета'], // Adjust column name to match your CSV header
+                            ticketNumber: row['Номер билета'],
                         });
                     })
                     .on('end', resolve)
@@ -79,5 +93,30 @@ export class TicketsController {
             this.logger.error('Error processing CSV', error.stack);
             throw new HttpException('Error processing CSV', HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Assign a ticket to a user' })
+    @ApiBody({ description: 'Ticket number to assign', type: AssignTicketToUserDto })
+    @ApiResponse({ status: 200, description: 'Ticket assigned successfully' })
+    @ApiResponse({ status: 404, description: 'Ticket not found' })
+    @ApiResponse({ status: 500, description: 'Internal server error' })
+    @Post('assign_ticket')
+    @UseGuards(JwtAuthGuard)
+    async assignTicketToUser(@Body() body: { ticketNumber: number }, @Req() req): Promise<void> {
+        const userId = req.user.userId;
+        await this.ticketService.assignTicketToUser(body.ticketNumber, userId);
+    }
+
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get ticket number by user' })
+    @ApiResponse({ status: 200, description: 'Ticket number retrieved successfully' })
+    @ApiResponse({ status: 404, description: 'Ticket not found' })
+    @ApiResponse({ status: 500, description: 'Internal server error' })
+    @Get('get_ticket_number')
+    @UseGuards(JwtAuthGuard)
+    async getTicketNumberByUser(@Req() req): Promise<number> {
+        const userId = req.user.userId;
+        return this.ticketService.getTicketNumberByUser(userId);
     }
 }

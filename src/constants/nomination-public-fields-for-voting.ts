@@ -11,6 +11,6 @@ export const NOMINATION_PUBLIC_FIELDS_FOR_VOTING: NominationPublicField[] = [
     },
     {
       code: 'edit',
-      fields: ['fandom', 'nickname', 'video_name', 'video_link'],    
+      fields: ['fandom', 'nickname', 'video_name', 'video_link', 'nyaf_edit_preview', 'nyaf_edit_link'],    
     },
   ];

@@ -18,27 +18,25 @@ export class TicketService {
         return await this.ticketRepository.createTickets(tickets);
     }
 
-    async assignTicketToUser(ticketNumber: number, userId: string) {
+    async assignTicketToUser(ticketNumber: number, userId: string): Promise<number | null> {
         const ticket = await this.getTicket(ticketNumber);
         if (!ticket) {
-            Logger.warn('Ticket not found');
-            return true;
+            throw new Error('Ticket not found');
         };
 
         if (ticket.userId) {
-            Logger.warn('Ticket already assigned to a user');
-            return false;
+            throw new Error('Ticket already assigned to a user');
         }
 
         await this.ticketRepository.deleteTicketsByUser(userId);
 
         ticket.userId = userId;
         await this.ticketRepository.updateTicket(ticket);
-        return true;
+        return ticket.ticketNumber;
     }
 
-    async getTicketNumberByUser(userId: string) : Promise<number> {
+    async getTicketNumberByUser(userId: string): Promise<number | null> {
         const ticket = await this.ticketRepository.getTicketByUser(userId);
-        return ticket?.ticketNumber;
+        return ticket?.ticketNumber ?? 0;
     }
 }

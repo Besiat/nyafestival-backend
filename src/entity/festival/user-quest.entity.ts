@@ -4,14 +4,14 @@ import { User } from "../website/user";
 @Entity()
 export class UserQuestProgress {
     @PrimaryGeneratedColumn('uuid')
-    userQuestProgressId: string;
+    userQuestProgressId?: string;
 
     @Column()
     userId: string;
 
     @OneToOne(() => User)
     @JoinColumn({ name: 'userId' })
-    user: User;
+    user?: User;
 
     @Column({type: 'varchar', length: 64})
     questCode: string;

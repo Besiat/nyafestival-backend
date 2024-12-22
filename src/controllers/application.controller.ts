@@ -108,4 +108,11 @@ export class ApplicationController {
         const applicationData = await this.applicationService.getApplicationData(applicationId);
         return applicationData;
     }
+
+    @Get('char-pic-application-data')
+    @ApiOperation({ operationId: 'getCharPicApplicationData', summary: 'Retrieve application data for char_pic field' })
+    @ApiResponse({ status: 200, description: 'List of application data with char_pic values' })
+    async getCharPicApplicationData(): Promise<{ applicationId: string; value: string }[]> {
+        return this.applicationService.getCharPicApplicationData();
+    }
 }

@@ -103,9 +103,14 @@ export class TicketsController {
     @ApiResponse({ status: 500, description: 'Internal server error' })
     @Post('assign_ticket')
     @UseGuards(JwtAuthGuard)
-    async assignTicketToUser(@Body() body: { ticketNumber: number }, @Req() req): Promise<void> {
+    async assignTicketToUser(@Body() body: { ticketNumber: number }, @Req() req, @Res() res): Promise<number> {
         const userId = req.user.userId;
-        await this.ticketService.assignTicketToUser(body.ticketNumber, userId);
+        try {
+            return await this.ticketService.assignTicketToUser(body.ticketNumber, userId);
+        }
+        catch (error) {
+            return res.status(400).send(error.message);
+        }
     }
 
     @ApiBearerAuth()

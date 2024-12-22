@@ -150,6 +150,11 @@ export class ApplicationService {
         await this.applicationRepository.update(application);
     }
 
+    async getCharPicApplicationData(): Promise<{ applicationId: string; value: string }[]> {
+        const result = await this.applicationDataRepository.getApplicationsWithCharPic();
+        return result;
+    }      
+
     private async validateApplicationData(applicationData: ApplicationDataDTO[], fields: Field[]) {
         for (const field of fields) {
             const applicationDataItem = applicationData.find(appData => appData.fieldId === field.fieldId);

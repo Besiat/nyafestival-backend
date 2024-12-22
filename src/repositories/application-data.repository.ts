@@ -39,4 +39,18 @@ export class ApplicationDataRepository {
     async remove(id: string): Promise<void> {
         await this.applicationDataRepository.delete(id);
     }
+
+    async getApplicationsWithCharPic(): Promise<{ applicationId: string; value: string }[]> {
+        return await this.applicationDataRepository
+            .createQueryBuilder('applicationData')
+            .select('application.applicationId', 'id')
+            .addSelect('applicationData.value', 'char_pic')
+            .innerJoin('application', 'application', 'application.applicationId = applicationData.applicationId')
+            .innerJoin('field', 'field', 'field.fieldId = applicationData.fieldId')
+            .where('application.state = :state', { state: 4 }) // Filter applications by state = 4
+            .andWhere('field.code = :code', { code: 'char_pic' }) // Filter field by code = 'char_pic'
+            .andWhere('applicationData.value != :empty', { empty: '' }) // Exclude empty values
+            .getRawMany();
+    }
+    
 }

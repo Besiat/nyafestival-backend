@@ -61,7 +61,7 @@ export class AuthService {
     async loginUsingEmail(loginDto: LoginDto): Promise<{ accessToken: string }> {
         const user = await this.userService.findByEmail(loginDto.email);
         if (!user) throw new BadRequestException("Пользователь не найден");
-        if (!bcrypt.compare(loginDto.password, user.password)) throw new BadRequestException("Неверный пароль");
+        if (!(await bcrypt.compare(loginDto.password, user.password))) throw new BadRequestException("Неверный пароль");
         if (!user.confirmed) throw new BadRequestException("Пожалуйста подтвердите Email");
         return this.login(user);
     }

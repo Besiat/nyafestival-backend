@@ -51,7 +51,6 @@ export class UserController {
     async loginFromVk(@Body() vkProfile: any, @Request() req): Promise<{ accessToken: string }> {
         // Use the findOrCreateUserFromVk function
         const user = await this.authService.findOrCreateUserFromVk(vkProfile);
-        console.log('11111');
         // Return the access token or any other response you need
         return { accessToken: user.accessToken };
     }

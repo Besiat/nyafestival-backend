@@ -57,6 +57,11 @@ import { UserQuestProgress } from './entity/festival/user-quest.entity';
 import { TicketsController } from './controllers/tickets.controller';
 import { TicketService } from './services/ticket.service';
 import { TicketRepository } from './repositories/ticket.repository';
+import { QuestController } from './controllers/quest.controller';
+import { QuestRepository } from './repositories/quest.repository';
+import { QuestService } from './services/quest.service';
+import { Quest2024 } from './constants/quest-2024';
+import { IQuest } from './interfaces/i-quest';
 
 dotenv.config();
 
@@ -96,7 +101,8 @@ dotenv.config();
         ConfigController,
         ScheduleController,
         VotingController,
-        TicketsController
+        TicketsController,
+        QuestController
     ],
     providers: [
         {
@@ -124,8 +130,14 @@ dotenv.config();
         ScheduleService,
         VotingService,
         TicketRepository,
-        TicketService],
+        TicketService,
+        QuestRepository,
+        QuestService,
+        {
+            provide: 'IQuest',
+            useClass: Quest2024,
+        },],
 })
 export class AppModule {
-    
+
 }

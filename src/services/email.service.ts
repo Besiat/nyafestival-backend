@@ -6,12 +6,13 @@ export class EmailService {
     private readonly brevoApiUrl = 'https://api.brevo.com/v3/smtp/email';
 
     async sendConfirmationEmail(userEmail: string, code: string): Promise<void> {
-        var sender = process.env.EMAIL_SENDER;
+        var sender_email = process.env.EMAIL_SENDER;
         var site_short_name = process.env.SITE_SHORT_NAME;
+        var sender_name = process.env.EMAIL_SENDER_NAME;
         const data = {
             sender: {
-                name: sender,
-                email: 'noreply@nyafest.ru'
+                name: sender_name,
+                email: sender_email
             },
             to: [{ email: userEmail }],
             subject: `Подтверждение почты для регистрации на сайте ${site_short_name}`,

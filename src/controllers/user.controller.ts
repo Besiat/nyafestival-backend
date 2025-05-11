@@ -8,12 +8,14 @@ import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ProfileDTO } from '../dto/profile.dto';
 import { Throttle } from '@nestjs/throttler';
 import { UserService } from '../services/user.service';
+import { VkAuthService } from '../services/vk-auth.service';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
 export class UserController {
     constructor(
         private readonly authService: AuthService,
+        private readonly vkAuthService: VkAuthService,
         private readonly userService: UserService,
     ) { }
 
@@ -50,6 +52,19 @@ export class UserController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     async loginFromVk(@Body() vkProfile: any, @Request() req): Promise<{ accessToken: string }> {
         // Use the findOrCreateUserFromVk function
+        const user = await this.authService.findOrCreateUserFromVk(vkProfile);
+        // Return the access token or any other response you need
+        return { accessToken: user.accessToken };
+    }
+
+    @Post('login-from-vk-new')
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
+    @ApiResponse({ status: 200, description: 'Login from VK successful', type: User })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    async loginFromVkNew(@Body() body: { code: string, deviceId: string }, @Request() req): Promise<{ accessToken: string }> {
+        // Use the findOrCreateUserFromVk function
+        const accessToken = await this.vkAuthService.getAccessToken(body.code, body.deviceId);
+        const vkProfile = await this.vkAuthService.getUserInfo(accessToken);
         const user = await this.authService.findOrCreateUserFromVk(vkProfile);
         // Return the access token or any other response you need
         return { accessToken: user.accessToken };

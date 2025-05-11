@@ -6,15 +6,17 @@ export class EmailService {
     private readonly brevoApiUrl = 'https://api.brevo.com/v3/smtp/email';
 
     async sendConfirmationEmail(userEmail: string, code: string): Promise<void> {
+        var sender = process.env.EMAIL_SENDER;
+        var site_short_name = process.env.SITE_SHORT_NAME;
         const data = {
             sender: {
-                name: 'NYAF',
+                name: sender,
                 email: 'noreply@nyafest.ru'
             },
             to: [{ email: userEmail }],
-            subject: 'Подтверждение почты для регистрации на сайте nyafest.ru',
-            htmlContent: `Здравствуйте! <br/> Спасибо за регистрацию на сайте nyafest.ru. Пожалуйста, перейдите по <a href='${process.env.APPLICATION_URL}/confirmEmail?code=${code}'>этой ссылке</a>, чтобы подтвердить свою почту.`,
-            textContent: `Здравствуйте!\nСпасибо за регистрацию на сайте nyafest.ru. Пожалуйста, перейдите по ссылке ниже, чтобы подтвердить свою почту:\n${process.env.APPLICATION_URL}/confirmEmail?code=${code}`,
+            subject: `Подтверждение почты для регистрации на сайте ${site_short_name}`,
+            htmlContent: `Здравствуйте! <br/> Спасибо за регистрацию на сайте ${site_short_name}. Пожалуйста, перейдите по <a href='${process.env.APPLICATION_URL}/confirmEmail?code=${code}'>этой ссылке</a>, чтобы подтвердить свою почту.`,
+            textContent: `Здравствуйте!\nСпасибо за регистрацию на сайте ${site_short_name}. Пожалуйста, перейдите по ссылке ниже, чтобы подтвердить свою почту:\n${process.env.APPLICATION_URL}/confirmEmail?code=${code}`,
         };
 
         const headers = {

@@ -8,3 +8,4 @@ uploads/
 .env
 local.env
 production.env
+ecosystem.config.js

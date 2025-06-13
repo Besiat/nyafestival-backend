@@ -1,143 +1,51 @@
-# 🎭 Nyaf Festival Backend
+# Nyaf Festival Backend
 
-A robust NestJS backend application for managing festival events, user registrations, and email communications. This project demonstrates modern backend development practices using TypeScript, NestJS framework, and external API integrations.
+Backend API for the Nyaf Festival platform built with NestJS and TypeScript. Handles festival event management, user registration, and automated email notifications. The platform allows dynamic creation of festival nominations and accepts applications from participants.
 
-## 📋 Project Overview
+**Live Deployments**: [coverfestufa.ru](https://coverfestufa.ru) | [nyafest.ru](https://nyafest.ru)
 
-This is the backend service for a festival management platform that handles:
-- User authentication and registration
-- Email confirmation workflows
-- Festival event management
-- Secure API endpoints
-- External service integrations (Brevo email service)
+## Application System Architecture
 
-## 🛠 Tech Stack
+The core functionality revolves around a flexible application management system with a three-tier structure:
 
-- **Framework**: NestJS (Node.js)
+### Dynamic Nomination System
+- **Nominations**: Main categories (e.g., "Cosplay", "Video Editing", "Dance") 
+- **Sub-nominations**: Specific subcategories within each nomination (e.g., "Photo Cosplay", "Pet Cosplay")
+- **Custom Fields**: Dynamic form fields that can be assigned to nominations with custom ordering
+- **Field Types**: Support for text, file uploads, dropdowns, and other input types
+
+### Technical Implementation
+
+#### Entity Structure
+The system uses a flexible many-to-many relationship pattern:
+- `Nomination` → `NominationField` → `Field` (many-to-many with ordering)
+- `Nomination` → `SubNomination` (one-to-many)
+- `SubNomination` → `Application` (one-to-many)
+- `Application` → `ApplicationData` (one-to-many)
+
+#### Dynamic Form Generation
+1. **Field Assignment**: Admins can dynamically assign fields to nominations with custom ordering
+2. **Form Rendering**: Frontend generates forms based on the nomination's assigned fields
+3. **Data Validation**: Server validates submitted data against field requirements and types
+4. **Flexible Storage**: Application data stored as key-value pairs mapped to field definitions
+
+#### Application Lifecycle
+1. **Registration**: Users submit applications for specific sub-nominations
+2. **Data Mapping**: Application data maps field IDs to user-provided values
+3. **State Management**: Applications progress through states (New → Pending → Accepted/Denied/Invalid)
+4. **Admin Interface**: Complete CRUD operations for managing applications and reviewing submissions
+
+### Key Features
+- **Field Type Support**: Text, textarea, file upload, dropdown, checkbox, radio, number, email
+- **Custom Ordering**: Fields can be ordered within nominations for consistent form layouts  
+- **File Handling**: Integrated file upload system for images, videos, and documents
+- **Voting System**: Public viewing of applications with configurable field visibility
+- **State Tracking**: Full audit trail of application status changes with admin notes
+
+## Tech Stack
+
+- **Framework**: NestJS
 - **Language**: TypeScript
-- **Email Service**: Brevo API
+- **Database**: TypeORM
+- **Email**: Brevo API
 - **HTTP Client**: Axios
-- **Architecture**: Modular service-based architecture
-
-## 🚀 Features
-
-### Email Service
-- Automated email confirmation for user registration
-- Multilingual support (Russian)
-- HTML and plain text email formats
-- Integration with Brevo email API
-- Error handling and logging
-
-### Security & Configuration
-- Environment-based configuration
-- API key management
-- Secure email verification flow
-
-## 📁 Project Structure
-
-```
-nyafestival-backend/
-├── src/
-│   ├── services/
-│   │   └── email.service.ts    # Email handling service
-│   ├── controllers/            # API controllers
-│   ├── modules/               # Feature modules
-│   └── main.ts               # Application entry point
-├── .env                      # Environment variables
-└── package.json             # Dependencies
-```
-
-## ⚙️ Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-# Email Configuration
-EMAIL_SENDER=your-email@domain.com
-EMAIL_SENDER_NAME=Your Festival Name
-SITE_SHORT_NAME=YourFestival
-BREVO_API_KEY=your-brevo-api-key
-
-# Application URLs
-APPLICATION_URL=http://localhost:3000
-```
-
-## 🔧 Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/nyafestival-backend.git
-   cd nyafestival-backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Run the application**
-   ```bash
-   # Development mode
-   npm run start:dev
-   
-   # Production mode
-   npm run start:prod
-   ```
-
-## 🧪 Testing
-
-```bash
-# Run unit tests
-npm run test
-
-# Run e2e tests
-npm run test:e2e
-
-# Generate test coverage
-npm run test:cov
-```
-
-## 📧 Email Service Implementation
-
-The email service demonstrates:
-- **Service Pattern**: Clean separation of concerns
-- **Error Handling**: Proper try-catch implementation
-- **External API Integration**: Brevo email service
-- **Template Management**: HTML and text email templates
-- **Internationalization**: Russian language support
-
-```typescript
-// Example usage
-await emailService.sendConfirmationEmail(
-  'user@example.com', 
-  'confirmation-code-123'
-);
-```
-
-## 🔒 Security Considerations
-
-- Environment variables for sensitive data
-- API key protection
-- Input validation (recommended to implement)
-- Rate limiting (recommended to implement)
-- CORS configuration (recommended to implement)
-
-## 🛠 Potential Improvements
-
-This project could be enhanced with:
-- Database integration (PostgreSQL/MongoDB)
-- User authentication with JWT
-- Input validation with class-validator
-- API documentation with Swagger
-- Rate limiting and security middleware
-- Unit and integration tests
-- Docker containerization
-- CI/CD pipeline setup

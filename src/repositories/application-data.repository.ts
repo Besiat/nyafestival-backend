@@ -40,17 +40,20 @@ export class ApplicationDataRepository {
         await this.applicationDataRepository.delete(id);
     }
 
-    async getApplicationsWithCharPic(): Promise<{ applicationId: string; value: string }[]> {
-        return await this.applicationDataRepository
-            .createQueryBuilder('applicationData')
-            .select('application.applicationId', 'id')
-            .addSelect('applicationData.value', 'char_pic')
-            .innerJoin('application', 'application', 'application.applicationId = applicationData.applicationId')
-            .innerJoin('field', 'field', 'field.fieldId = applicationData.fieldId')
-            .where('application.state = :state', { state: 4 }) // Filter applications by state = 4
-            .andWhere('field.code = :code', { code: 'char_pic' }) // Filter field by code = 'char_pic'
-            .andWhere('applicationData.value != :empty', { empty: '' }) // Exclude empty values
-            .getRawMany();
+   async getApplicationsWithFieldValues(fieldCodes: string[]): Promise<{ applicationId: string; value: string }[]> {
+    return await this.applicationDataRepository
+        .createQueryBuilder('applicationData')
+        .select('application.applicationId', 'applicationId')
+        .addSelect('applicationData.value', 'value')
+        .innerJoin(
+            'application',
+            'application',
+            'application.applicationId = applicationData.applicationId',
+        )
+        .innerJoin('field', 'field', 'field.fieldId = applicationData.fieldId')
+        .where('application.state = :state', { state: 4 })
+        .andWhere('field.code IN (:...codes)', { codes: fieldCodes }) // multiple field codes
+        .andWhere('applicationData.value != :empty', { empty: '' }) // exclude empty values
+        .getRawMany();
     }
-    
 }

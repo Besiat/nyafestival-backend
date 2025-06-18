@@ -150,8 +150,8 @@ export class ApplicationService {
         await this.applicationRepository.update(application);
     }
 
-    async getCharPicApplicationData(): Promise<{ applicationId: string; value: string }[]> {
-        const result = await this.applicationDataRepository.getApplicationsWithCharPic();
+    async getApplicationDataWithFieldValues(fieldCodes: string[]): Promise<{ applicationId: string; value: string }[]> {
+        const result = await this.applicationDataRepository.getApplicationsWithFieldValues(fieldCodes);
         return result;
     }      
 

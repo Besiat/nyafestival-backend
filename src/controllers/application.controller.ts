@@ -113,6 +113,14 @@ export class ApplicationController {
     @ApiOperation({ operationId: 'getCharPicApplicationData', summary: 'Retrieve application data for char_pic field' })
     @ApiResponse({ status: 200, description: 'List of application data with char_pic values' })
     async getCharPicApplicationData(): Promise<{ applicationId: string; value: string }[]> {
-        return this.applicationService.getCharPicApplicationData();
+        return this.applicationService.getApplicationDataWithFieldValues(['char_pic']);
+    }
+
+    @Get('fio-application-data')
+    @ApiOperation({ operationId: 'getFioApplicationData', summary: 'Retrieve application data for fio and fio_group field'})
+    @ApiResponse({status: 200, description: 'List of application data with fio values' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    async getFioApplicationData(): Promise<{ applicationId: string; value: string }[]> {
+        return this.applicationService.getApplicationDataWithFieldValues(['FIO', 'fio_group']);
     }
 }

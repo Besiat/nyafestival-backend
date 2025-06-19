@@ -102,14 +102,14 @@ export class TicketsController {
     @ApiResponse({ status: 404, description: 'Ticket not found' })
     @ApiResponse({ status: 500, description: 'Internal server error' })
     @Post('assign_ticket')
-    @UseGuards(JwtAuthGuard)
-    async assignTicketToUser(@Body() body: { ticketNumber: number }, @Req() req, @Res() res): Promise<number> {
+    @UseGuards(JwtAuthGuard)    async assignTicketToUser(@Body() body: { ticketNumber: number }, @Req() req, @Res() res): Promise<void> {
         const userId = req.user.userId;
         try {
-            return await this.ticketService.assignTicketToUser(body.ticketNumber, userId);
+            const result = await this.ticketService.assignTicketToUser(body.ticketNumber, userId);
+            res.status(200).json(result);
         }
         catch (error) {
-            return res.status(400).send(error.message);
+            res.status(400).send(error.message);
         }
     }
 

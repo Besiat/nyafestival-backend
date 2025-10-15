@@ -14,6 +14,7 @@ import { ApplicationState } from "../entity/festival/application.entity";
 import { Field } from "../entity/festival/field.entity";
 import { ApplicationDataDTO } from "../dto/application-data.dto";
 import { User } from "../entity/website/user";
+import { UserService } from "./user.service";
 
 @Injectable()
 export class ApplicationService {
@@ -23,6 +24,7 @@ export class ApplicationService {
         private readonly applicationRepository: ApplicationRepository,
         private readonly applicationDataRepository: ApplicationDataRepository,
         private readonly fileService: FileService,
+        private readonly userService: UserService,
     ) { }
 
     async getApplications(): Promise<Application[]> {
@@ -68,12 +70,13 @@ export class ApplicationService {
         }
     }
 
-    async updateApplication(user: User, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
+    async updateApplication(userId: string, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
         const application = await this.applicationRepository.get(updateApplicationDTO.applicationId);
         if (!application) {
             throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
         }
 
+        const user = await this.userService.findById(userId);
         if (user.userId !== application.userId && !user.isAdmin) {
             throw new BadRequestException(`Different userId`);
         }

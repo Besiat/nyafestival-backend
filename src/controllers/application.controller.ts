@@ -13,7 +13,7 @@ import { UserService } from '../services/user.service';
 @Controller('api/applications')
 @ApiTags('Applications')
 export class ApplicationController {
-    constructor(private readonly applicationService: ApplicationService, private readonly userService: UserService) { }
+    constructor(private readonly applicationService: ApplicationService) { }
 
     @Post()
     @Throttle({ default: { limit: 1, ttl: 5000 } })
@@ -36,8 +36,7 @@ export class ApplicationController {
     @ApiBearerAuth()
     async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
         const userId = req.user.userId;
-        const user = await this.userService.findById(userId);
-        await this.applicationService.updateApplication(user, application);
+        await this.applicationService.updateApplication(userId, application);
     }
 
     @Post(':applicationId/set-pending-state')

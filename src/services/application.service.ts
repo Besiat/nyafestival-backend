@@ -13,6 +13,7 @@ import { FieldType } from "../enums/fieldType";
 import { ApplicationState } from "../entity/festival/application.entity";
 import { Field } from "../entity/festival/field.entity";
 import { ApplicationDataDTO } from "../dto/application-data.dto";
+import { UserService } from "./user.service";
 
 @Injectable()
 export class ApplicationService {
@@ -22,6 +23,7 @@ export class ApplicationService {
         private readonly applicationRepository: ApplicationRepository,
         private readonly applicationDataRepository: ApplicationDataRepository,
         private readonly fileService: FileService,
+        private readonly userService: UserService,
     ) { }
 
     async getApplications(): Promise<Application[]> {
@@ -73,7 +75,8 @@ export class ApplicationService {
             throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
         }
 
-        if (userId !== application.userId) {
+        const user = await this.userService.findById(userId);
+        if (user.userId !== application.userId && !user.isAdmin) {
             throw new BadRequestException(`Different userId`);
         }
 

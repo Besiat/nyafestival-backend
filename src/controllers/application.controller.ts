@@ -28,16 +28,15 @@ export class ApplicationController {
 
     @Put()
     @Throttle({ default: { limit: 1, ttl: 5000 } })
-    @ApiOperation({ operationId: 'update', summary: 'Register a new application' })
-    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to register' })
-    @ApiResponse({ status: 201, description: 'Registers a new application' })
+    @ApiOperation({ operationId: 'update', summary: 'Update an application' })
+    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to update' })
+    @ApiResponse({ status: 200, description: 'Application updated successfully' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
         const userId = req.user.userId;
         await this.applicationService.updateApplication(userId, application);
     }
-
 
     @Post(':applicationId/set-pending-state')
     @ApiOperation({ operationId: 'setPendingState', summary: 'Set the application to Pending state' })

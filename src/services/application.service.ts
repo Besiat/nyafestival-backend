@@ -73,7 +73,7 @@ export class ApplicationService {
             throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
         }
 
-        if (user.id !== application.userId || !user.isAdmin) {
+        if (user.id !== application.userId && !user.isAdmin) {
             throw new BadRequestException(`Different userId`);
         }
 

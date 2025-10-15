@@ -8,11 +8,12 @@ import { Application } from '../entity/festival/application.entity';
 import { UpdateApplicationDTO } from '../dto/update-application.dto';
 import { ApplicationData } from '../entity/festival/application-data.entity';
 import { AdminGuard } from '../guards/admin-guard';
+import { UserService } from '../services/user.service';
 
 @Controller('api/applications')
 @ApiTags('Applications')
 export class ApplicationController {
-    constructor(private readonly applicationService: ApplicationService) { }
+    constructor(private readonly applicationService: ApplicationService, private readonly userService: UserService) { }
 
     @Post()
     @Throttle({ default: { limit: 1, ttl: 5000 } })
@@ -34,7 +35,8 @@ export class ApplicationController {
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
-        const user = req.user;
+        const userId = req.user.userId;
+        const user = await this.userService.findById(userId);
         await this.applicationService.updateApplication(user, application);
     }
 

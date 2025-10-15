@@ -13,6 +13,7 @@ import { FieldType } from "../enums/fieldType";
 import { ApplicationState } from "../entity/festival/application.entity";
 import { Field } from "../entity/festival/field.entity";
 import { ApplicationDataDTO } from "../dto/application-data.dto";
+import { User } from "../entity/website/user";
 
 @Injectable()
 export class ApplicationService {
@@ -67,13 +68,13 @@ export class ApplicationService {
         }
     }
 
-    async updateApplication(user: any, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
+    async updateApplication(user: User, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
         const application = await this.applicationRepository.get(updateApplicationDTO.applicationId);
         if (!application) {
             throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
         }
 
-        if (user.id !== application.userId && !user.isAdmin) {
+        if (user.userId !== application.userId && !user.isAdmin) {
             throw new BadRequestException(`Different userId`);
         }
 

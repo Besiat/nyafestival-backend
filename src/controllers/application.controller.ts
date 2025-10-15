@@ -8,7 +8,6 @@ import { Application } from '../entity/festival/application.entity';
 import { UpdateApplicationDTO } from '../dto/update-application.dto';
 import { ApplicationData } from '../entity/festival/application-data.entity';
 import { AdminGuard } from '../guards/admin-guard';
-import { UserService } from '../services/user.service';
 
 @Controller('api/applications')
 @ApiTags('Applications')

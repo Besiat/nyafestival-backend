@@ -13,7 +13,6 @@ import { FieldType } from "../enums/fieldType";
 import { ApplicationState } from "../entity/festival/application.entity";
 import { Field } from "../entity/festival/field.entity";
 import { ApplicationDataDTO } from "../dto/application-data.dto";
-import { User } from "../entity/website/user";
 import { UserService } from "./user.service";
 
 @Injectable()

@@ -67,7 +67,7 @@ export class ApplicationService {
         }
     }
 
-    async updateApplication(userId: string, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
+    async updateApplicationByUser(userId: string, updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
         const application = await this.applicationRepository.get(updateApplicationDTO.applicationId);
         if (!application) {
             throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
@@ -76,6 +76,20 @@ export class ApplicationService {
         if (userId !== application.userId) {
             throw new BadRequestException(`Different userId`);
         }
+
+        await this.updateApplication(updateApplicationDTO, application);
+    }
+
+    async updateApplicationByAdmin(updateApplicationDTO: UpdateApplicationDTO): Promise<void> {
+        const application = await this.applicationRepository.get(updateApplicationDTO.applicationId);
+        if (!application) {
+            throw new BadRequestException(`Application not found: ${updateApplicationDTO.applicationId}`);
+        }
+
+        await this.updateApplication(updateApplicationDTO, application);
+    }
+
+    async updateApplication(updateApplicationDTO: UpdateApplicationDTO, existingApplication: Application): Promise<void> {
 
         const subNomination = await this.subNominationService.getSubNominationById(updateApplicationDTO.subNominationId);
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
@@ -86,7 +100,7 @@ export class ApplicationService {
                 throw new BadRequestException(`Field not found: ${updatedAppData.fieldId}`);
             }
 
-            const existingAppData = application.applicationData.find(appData => appData.fieldId === updatedAppData.fieldId);
+            const existingAppData = existingApplication.applicationData.find(appData => appData.fieldId === updatedAppData.fieldId);
 
             if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
                 const file = await this.fileService.getByFileName(updatedAppData.value);
@@ -98,7 +112,7 @@ export class ApplicationService {
                         throw new BadRequestException(`File does not exist at path: ${filePath}`);
                     }
 
-                    await this.fileService.saveApplicationId(updatedAppData.value, application.applicationId);
+                    await this.fileService.saveApplicationId(updatedAppData.value, existingApplication.applicationId);
                 }
             }
 
@@ -109,19 +123,19 @@ export class ApplicationService {
             else {
                 const newAppData = new ApplicationData();
                 newAppData.fieldId = field.fieldId;
-                newAppData.application = application;
+                newAppData.application = existingApplication;
                 newAppData.value = updatedAppData.value;
                 await this.applicationDataRepository.create(newAppData);
             }
         }
 
-        const dtos = application.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value }; });
+        const dtos = existingApplication.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value }; });
 
-        application.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields);
-        application.subNomination = subNomination;
-        application.state = 0;
+        existingApplication.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields);
+        existingApplication.subNomination = subNomination;
+        existingApplication.state = 0;
         // Save the updated application
-        await this.applicationRepository.update(application);
+        await this.applicationRepository.update(existingApplication);
     }
 
     async setPendingState(applicationId: string): Promise<void> {

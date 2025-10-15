@@ -28,14 +28,25 @@ export class ApplicationController {
 
     @Put()
     @Throttle({ default: { limit: 1, ttl: 5000 } })
-    @ApiOperation({ operationId: 'update', summary: 'Register a new application' })
-    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to register' })
-    @ApiResponse({ status: 201, description: 'Registers a new application' })
+    @ApiOperation({ operationId: 'update', summary: 'Update an application' })
+    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to update' })
+    @ApiResponse({ status: 200, description: 'Application updated successfully' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
         const userId = req.user.userId;
-        await this.applicationService.updateApplication(userId, application);
+        await this.applicationService.updateApplicationByUser(userId, application);
+    }
+
+    @Put("/by-admin")
+    @Throttle({ default: { limit: 1, ttl: 5000 } })
+    @ApiOperation({ operationId: 'update', summary: 'Update an application by Admin user' })
+    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to update' })
+    @ApiResponse({ status: 200, description: 'Application updated successfully' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
+    async updateApplicationByAdmin(@Body() application: UpdateApplicationDTO, @Request() req): Promise<void> {
+        await this.applicationService.updateApplicationByAdmin(application);
     }
 
 

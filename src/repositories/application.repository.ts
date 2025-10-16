@@ -18,7 +18,7 @@ export class ApplicationRepository {
             where: {
                 applicationId: id,
             },
-            relations: ['subNomination', 'applicationData'],
+            relations: ['subNomination', 'subNomination.nomination', 'applicationData'],
         });
     }
 

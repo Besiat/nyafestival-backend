@@ -35,7 +35,27 @@ export class ApplicationService {
     }
 
     async getApplicationData(applicationId: string): Promise<ApplicationData[]> {
-        return this.applicationDataRepository.getByApplicationId(applicationId);
+        const applicationData = await this.applicationDataRepository.getByApplicationId(applicationId);
+        const application = await this.applicationRepository.get(applicationId);
+        
+        if (!application || !application.subNomination || !application.subNomination.nomination) {
+            return applicationData;
+        }
+
+        const nominationFields = await this.nominationService.getFields(application.subNomination.nomination.nominationId);
+        
+        const fieldOrderMap = new Map<string, number>();
+        nominationFields.forEach(nf => {
+            fieldOrderMap.set(nf.fieldId, nf.order);
+        });
+
+        applicationData.forEach(appData => {
+            if (appData.field && fieldOrderMap.has(appData.fieldId)) {
+                appData.field.order = fieldOrderMap.get(appData.fieldId);
+            }
+        });
+
+        return applicationData;
     }
 
     async registerApplication(userId: string, application: RegisterApplicationDTO) {
@@ -80,41 +100,43 @@ export class ApplicationService {
             throw new BadRequestException(`Different userId`);
         }
 
-        const subNomination = await this.subNominationService.getSubNominationById(updateApplicationDTO.subNominationId);
+        const subNomination = await this.subNominationService.getSubNominationById(updateApplicationDTO.subNominationId ?? application.subNominationId);
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
-        for (const updatedAppData of updateApplicationDTO.applicationData) {
-            const field = fields.find(f => f.fieldId === updatedAppData.fieldId);
-            if (!field) {
-                throw new BadRequestException(`Field not found: ${updatedAppData.fieldId}`);
-            }
-
-            const existingAppData = application.applicationData.find(appData => appData.fieldId === updatedAppData.fieldId);
-
-            if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
-                const file = await this.fileService.getByFileName(updatedAppData.value);
-                if (file) {
-                    const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
-                    try {
-                        await fsPromises.access(filePath, fsPromises.constants.F_OK);
-                    } catch (err) {
-                        throw new BadRequestException(`File does not exist at path: ${filePath}`);
-                    }
-
-                    await this.fileService.saveApplicationId(updatedAppData.value, application.applicationId);
+        if (updateApplicationDTO.applicationData) {
+            for (const updatedAppData of updateApplicationDTO.applicationData) {
+                const field = fields.find(f => f.fieldId === updatedAppData.fieldId);
+                if (!field) {
+                    throw new BadRequestException(`Field not found: ${updatedAppData.fieldId}`);
                 }
-            }
 
-            if (existingAppData) {
-                existingAppData.value = updatedAppData.value;
-                await this.applicationDataRepository.update(existingAppData);
-            }
-            else {
-                const newAppData = new ApplicationData();
-                newAppData.fieldId = field.fieldId;
-                newAppData.application = application;
-                newAppData.value = updatedAppData.value;
-                await this.applicationDataRepository.create(newAppData);
+                const existingAppData = application.applicationData.find(appData => appData.fieldId === updatedAppData.fieldId);
+
+                if (field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) {
+                    const file = await this.fileService.getByFileName(updatedAppData.value);
+                    if (file) {
+                        const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
+                        try {
+                            await fsPromises.access(filePath, fsPromises.constants.F_OK);
+                        } catch (err) {
+                            throw new BadRequestException(`File does not exist at path: ${filePath}`);
+                        }
+
+                        await this.fileService.saveApplicationId(updatedAppData.value, application.applicationId);
+                    }
+                }
+
+                if (existingAppData) {
+                    existingAppData.value = updatedAppData.value;
+                    await this.applicationDataRepository.update(existingAppData);
+                }
+                else {
+                    const newAppData = new ApplicationData();
+                    newAppData.fieldId = field.fieldId;
+                    newAppData.application = application;
+                    newAppData.value = updatedAppData.value;
+                    await this.applicationDataRepository.create(newAppData);
+                }
             }
         }
 
@@ -156,7 +178,7 @@ export class ApplicationService {
     async getApplicationDataWithFieldValues(fieldCodes: string[]): Promise<{ applicationId: string; value: string }[]> {
         const result = await this.applicationDataRepository.getApplicationsWithFieldValues(fieldCodes);
         return result;
-    }      
+    }
 
     private async validateApplicationData(applicationData: ApplicationDataDTO[], fields: Field[]) {
         for (const field of fields) {

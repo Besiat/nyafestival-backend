@@ -20,8 +20,8 @@ export class ApplicationData {
 
   @ManyToOne(() => Field)
   @JoinColumn({ name: 'fieldId' })
+  
   field: Field;
-
   @Column({ type: 'text', nullable: true })
   value: string;
 }

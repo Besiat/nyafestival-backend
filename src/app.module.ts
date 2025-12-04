@@ -60,9 +60,9 @@ import { TicketRepository } from './repositories/ticket.repository';
 import { QuestController } from './controllers/quest.controller';
 import { QuestRepository } from './repositories/quest.repository';
 import { QuestService } from './services/quest.service';
-import { Quest2024 } from './constants/quest-2024';
 import { IQuest } from './interfaces/i-quest';
 import { VkAuthService } from './services/vk-auth.service';
+import { Quest2025 } from './constants/quest-2025';
 
 dotenv.config();
 
@@ -137,7 +137,7 @@ dotenv.config();
         VkAuthService,
         {
             provide: 'IQuest',
-            useClass: Quest2024,
+            useClass: Quest2025,
         },],
 })
 export class AppModule {

@@ -9,7 +9,6 @@ export class QuestRepository {
     constructor(@InjectRepository(UserQuestProgress) private questRepository: Repository<UserQuestProgress>) { }
 
     async getUserQuestProgress(userId: string, questCode: string) {
-        const userQuest = await this.questRepository.findOne({where: {userId, questCode}});
         return await this.questRepository.findOne({where: {userId, questCode}});
     }
 

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "../website/user";
 
 @Entity()
@@ -9,7 +9,7 @@ export class UserQuestProgress {
     @Column()
     userId: string;
 
-    @OneToOne(() => User)
+    @ManyToOne(() => User)
     @JoinColumn({ name: 'userId' })
     user?: User;
 

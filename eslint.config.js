@@ -27,7 +27,7 @@ module.exports = [
       },
       rules: {
          ...tseslint.configs.recommended.rules,
-         semi: ['error', 'always'],
+         semi: 'off',
          '@typescript-eslint/no-floating-promises': ['error'],
       },
    },

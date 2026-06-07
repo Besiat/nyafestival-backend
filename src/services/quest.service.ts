@@ -13,7 +13,7 @@ export class QuestService {
             throw new Error('Invalid step');
         }
 
-        this.questRepository.saveUserQuestProgress({ ...userQuest, lastStep: nextStep });
+        await this.questRepository.saveUserQuestProgress({ ...userQuest, lastStep: nextStep });
         return nextStep;
     }
 }

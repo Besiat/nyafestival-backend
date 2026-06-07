@@ -62,6 +62,8 @@ import { QuestService } from './services/quest.service';
 import { VkAuthService } from './services/vk-auth.service';
 import { Quest2025 } from './constants/quest-2025';
 import { loadEnv } from './config/env';
+import { NominationType } from './entity/festival/nomination-type.entity';
+import { NominationTypeRepository } from './repositories/nomination-type.repository';
 
 loadEnv();
 
@@ -84,7 +86,7 @@ loadEnv();
         TypeOrmModule.forRootAsync({
             useClass: DatabaseConfiguration
         }),
-        TypeOrmModule.forFeature([Page, Nomination, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote, StageVote, Ticket, UserQuestProgress]),
+        TypeOrmModule.forFeature([Page, Nomination, NominationType, User, SubNomination, Field, ApplicationFile, Application, ApplicationData, NominationField, Config, Block, ScheduleItem, Vote, StageVote, Ticket, UserQuestProgress]),
         ThrottlerModule.forRoot([{
             ttl: 1000,
             limit: 50,
@@ -113,6 +115,7 @@ loadEnv();
         PageRepository,
         NominationService,
         NominationRepository,
+        NominationTypeRepository,
         UserService,
         UserRepository,
         AuthService,

@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { SubNomination } from "./sub-nomination.entity";
 import { NominationField } from "./nomination-fields.entity";
+import { NominationType } from "./nomination-type.entity";
 
 @Entity()
 export class Nomination {
@@ -22,6 +23,11 @@ export class Nomination {
 
     @OneToMany(() => NominationField, (nominationField) => nominationField.nomination, { cascade: true })
     nominationFields: NominationField[];
+
+    @ManyToOne(() => NominationType, { eager: true })
+    @JoinColumn({ name: 'nominationTypeId' })
+    @ApiProperty({ type: () => NominationType, description: 'Type of the nomination' })
+    nominationType: NominationType;
 
     @Column({ default: 0 })
     order: number = 0;

@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: nyafestival-local-postgres
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_DB: nyafestival_local
+      POSTGRES_USER: nyafestival_local
+      POSTGRES_PASSWORD: nyafestival_local_password
+    volumes:
+      - nyafestival_local_postgres:/var/lib/postgresql/data
+      - ./local-backups:/backups:ro
+
+volumes:
+  nyafestival_local_postgres:

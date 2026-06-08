@@ -1,14 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as dotenv from 'dotenv';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { json, urlencoded } from 'express';
-dotenv.config({ path: './.env' });
+import { json, static as expressStatic, urlencoded } from 'express';
+import { loadEnv } from './config/env';
+
+loadEnv();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
+  app.use('/u', expressStatic(process.env.UPLOAD_PATH || './uploads'));
   app.enableCors();
 
   const config = new DocumentBuilder()

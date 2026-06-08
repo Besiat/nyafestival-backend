@@ -30,7 +30,6 @@ import { FileController } from './controllers/file.controller';
 import { FileService } from './services/file.service';
 import { ApplicationFile } from './entity/website/application-file.entity';
 import * as multer from 'multer';
-import * as dotenv from 'dotenv';
 import ShortUniqueId from 'short-unique-id';
 import { ApplicationService } from './services/application.service';
 import { ApplicationRepository } from './repositories/application.repository';
@@ -62,8 +61,9 @@ import { QuestRepository } from './repositories/quest.repository';
 import { QuestService } from './services/quest.service';
 import { VkAuthService } from './services/vk-auth.service';
 import { Quest2025 } from './constants/quest-2025';
+import { loadEnv } from './config/env';
 
-dotenv.config();
+loadEnv();
 
 @Module({
     imports: [

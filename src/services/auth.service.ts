@@ -8,6 +8,11 @@ import { EmailService } from './email.service';
 import { LoginDto } from '../dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 
+interface VkProfile {
+    uid?: string;
+    first_name?: string;
+}
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -51,7 +56,7 @@ export class AuthService {
         await this.emailService.sendConfirmationEmail(registerDto.email, emailConfirmationToken);
     }
 
-    async login(user: any) {
+    async login(user: User) {
         const payload = { userId: user.userId, username: user.username, isAdmin: user.isAdmin }; // You can include additional user data in the payload
         return {
             accessToken: this.jwtService.sign(payload),
@@ -66,7 +71,7 @@ export class AuthService {
         return this.login(user);
     }
 
-    async findOrCreateUserFromVk(profile: any): Promise<User> {
+    async findOrCreateUserFromVk(profile: VkProfile): Promise<User> {
         if (!profile.uid) return null;
         let existingUser = await this.userService.findByVkId(profile.uid);
         if (!existingUser) {

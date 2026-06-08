@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Ticket } from "../entity/festival/ticket.entity";
 import { TicketRepository } from "../repositories/ticket.repository";
 

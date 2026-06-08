@@ -1,5 +1,6 @@
-import { Controller, Headers, Logger, Post, Res, HttpException, HttpStatus, RawBodyRequest, UseInterceptors, UploadedFile, UseGuards, Param, Req, Body, Get } from "@nestjs/common";
-import { Response } from "express";
+import { Controller, Headers, Logger, Post, Res, HttpException, HttpStatus, RawBodyRequest, UseInterceptors, UploadedFile, UseGuards, Req, Body, Get } from "@nestjs/common";
+import { Response, Request } from "express";
+import type { Express } from 'express';
 import { TicketService } from "../services/ticket.service";
 import { QticketsHookDataDto } from "../dto/qtickets-hook-data.dto";
 import { FileInterceptor } from "@nestjs/platform-express";

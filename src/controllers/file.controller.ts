@@ -5,6 +5,7 @@ import { ApplicationFile } from '../entity/website/application-file.entity';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
+import type { Express } from 'express';
 
 @Controller('api/files')
 @ApiTags('Files')

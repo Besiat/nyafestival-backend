@@ -118,7 +118,7 @@ export class ApplicationService {
                         const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
                         try {
                             await fsPromises.access(filePath, fsPromises.constants.F_OK);
-                        } catch (err) {
+                        } catch {
                             throw new BadRequestException(`File does not exist at path: ${filePath}`);
                         }
 
@@ -196,7 +196,7 @@ export class ApplicationService {
                 const filePath = `${process.env.UPLOAD_PATH}/${file.fileName}`;
                 try {
                     await fsPromises.access(filePath, fsPromises.constants.F_OK);
-                } catch (err) {
+                } catch {
                     throw new BadRequestException(`File does not exist at path: ${filePath}`);
                 }
             }

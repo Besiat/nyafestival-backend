@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm"
-import { Application } from "../festival/application.entity"
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Application } from "../festival/application.entity";
+import { IsEmail } from "class-validator";
 import { Ticket } from "../festival/ticket.entity";
 
 @Entity()

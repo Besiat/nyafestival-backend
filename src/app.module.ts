@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { PagesController } from './controllers/page.controller';
 import { PageService } from './services/page.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -29,8 +29,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { FileController } from './controllers/file.controller';
 import { FileService } from './services/file.service';
 import { ApplicationFile } from './entity/website/application-file.entity';
-import multer = require('multer');
-import dotenv = require('dotenv');
+import * as multer from 'multer';
 import ShortUniqueId from 'short-unique-id';
 import { ApplicationService } from './services/application.service';
 import { ApplicationRepository } from './repositories/application.repository';
@@ -60,11 +59,11 @@ import { TicketRepository } from './repositories/ticket.repository';
 import { QuestController } from './controllers/quest.controller';
 import { QuestRepository } from './repositories/quest.repository';
 import { QuestService } from './services/quest.service';
-import { IQuest } from './interfaces/i-quest';
 import { VkAuthService } from './services/vk-auth.service';
 import { Quest2025 } from './constants/quest-2025';
+import { loadEnv } from './config/env';
 
-dotenv.config();
+loadEnv();
 
 @Module({
     imports: [

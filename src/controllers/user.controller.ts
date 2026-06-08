@@ -60,7 +60,7 @@ export class UserController {
     @Post('login-from-vk-new')
     @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiResponse({ status: 200, description: 'Login from VK successful', type: User })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async loginFromVkNew(@Body() body: { code: string, deviceId: string }, @Request() req): Promise<{ accessToken: string }> {
         // Use the findOrCreateUserFromVk function
         const accessToken = await this.vkAuthService.getAccessToken(body.code, body.deviceId);

@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, ValidationPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FieldService } from '../services/field.service';
 import { Field } from '../entity/festival/field.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { JwtAuthGuard } from '../guards/jwt-guard';
+import { CreateFieldDTO } from '../dto/create-field.dto';
 
 @Controller('api/fields')
 @ApiTags('Fields')
@@ -28,9 +29,9 @@ export class FieldsController {
 
   @Post()
   @ApiOperation({ operationId: 'create', summary: 'Create a new field' })
-  @ApiBody({ type: Field, description: 'Field data to create' })
+  @ApiBody({ type: CreateFieldDTO, description: 'Field data to create' })
   @ApiResponse({ status: 201, description: 'Creates a new field', type: Field })
-  async create(@Body() fieldData: Partial<Field>): Promise<Field> {
+  async create(@Body(ValidationPipe) fieldData: CreateFieldDTO): Promise<Field> {
     return this.fieldService.createField(fieldData);
   }
 

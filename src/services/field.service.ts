@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { FieldRepository } from '../repositories/field.repository';
 import { Field } from '../entity/festival/field.entity';
+import { CreateFieldDTO } from '../dto/create-field.dto';
 
 @Injectable()
 export class FieldService {
@@ -14,9 +15,9 @@ export class FieldService {
         return this.fieldRepository.get(id);
     }
 
-    async createField(fieldData: Partial<Field>): Promise<Field> {
+    async createField(fieldData: CreateFieldDTO): Promise<Field> {
         const fieldWithSameCode = await this.fieldRepository.getByCode(fieldData.code);
-        if (!!fieldWithSameCode) throw new BadRequestException(`Field with code ${fieldData.code} already exist`)
+        if (fieldWithSameCode) throw new BadRequestException(`Field with code ${fieldData.code} already exist`)
         return this.fieldRepository.create(fieldData);
     }
 

@@ -4,10 +4,20 @@ const tsParser = require('@typescript-eslint/parser');
 const globals = require('globals');
 
 module.exports = [
-   js.configs.recommended,
+   {
+      ignores: ['build/**', 'node_modules/**'],
+   },
+   {
+      ...js.configs.recommended,
+      languageOptions: {
+         ...js.configs.recommended.languageOptions,
+         globals: {
+            ...globals.node,
+         },
+      },
+   },
    {
       files: ['**/*.ts'],
-      ignores: ['build/**', 'node_modules/**'],
       languageOptions: {
          ecmaVersion: 'latest',
          sourceType: 'module',

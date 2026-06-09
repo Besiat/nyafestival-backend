@@ -14,6 +14,7 @@ import { ApplicationState } from "../entity/festival/application.entity";
 import { Field } from "../entity/festival/field.entity";
 import { ApplicationDataDTO } from "../dto/application-data.dto";
 import { UserService } from "./user.service";
+import { withPublicApplicationState } from "../utils/application-public-state";
 
 @Injectable()
 export class ApplicationService {
@@ -31,7 +32,8 @@ export class ApplicationService {
     }
 
     async getByUserId(userId: string): Promise<Application[]> {
-        return this.applicationRepository.getByUserId(userId);
+        const applications = await this.applicationRepository.getByUserId(userId);
+        return applications.map(withPublicApplicationState);
     }
 
     async getApplicationData(applicationId: string): Promise<ApplicationData[]> {

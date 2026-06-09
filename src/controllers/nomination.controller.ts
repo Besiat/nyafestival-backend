@@ -8,6 +8,7 @@ import { SubNomination } from '../entity/festival/sub-nomination.entity';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { NominationPublicDTO } from '../dto/nomination-public.dto';
 import { randomUUID } from 'crypto';
+import { getPublicStateFromVisibility } from '../utils/application-public-state';
 
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
@@ -44,7 +45,7 @@ export class NominationController {
                 applications: subNomination.applications.map(application => ({
                     id: randomUUID(),
                     fullName: application.fullName,
-                    status: application.state,
+                    status: getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
                 })),
             })),
         }));

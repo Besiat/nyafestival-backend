@@ -18,12 +18,12 @@ export class ApplicationRepository {
             where: {
                 applicationId: id,
             },
-            relations: ['subNomination', 'subNomination.nomination', 'applicationData'],
+            relations: ['subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType', 'applicationData'],
         });
     }
 
     async getByUserId(userId: string): Promise<Application[]> {
-        return await this.applicationRepository.find({ where: { userId }, relations: ['applicationData', 'subNomination', 'subNomination.nomination'] });
+        return await this.applicationRepository.find({ where: { userId }, relations: ['applicationData', 'subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType'] });
     }
 
     async create(applicationData: Partial<Application>): Promise<Application> {

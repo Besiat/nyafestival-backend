@@ -17,6 +17,7 @@ export class NominationRepository {
     async getAllWithApplications(): Promise<Nomination[]> {
         const nominations = await this.nominationRepository
             .createQueryBuilder('nomination')
+            .leftJoinAndSelect('nomination.nominationType', 'nominationType')
             .leftJoinAndSelect('nomination.subNominations', 'subNominations')
             .leftJoinAndSelect('subNominations.applications', 'applications')
             .orderBy('subNominations.order', 'ASC')

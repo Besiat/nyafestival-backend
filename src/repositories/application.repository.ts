@@ -5,15 +5,13 @@ import { Application } from '../entity/festival/application.entity';
 
 @Injectable()
 export class ApplicationRepository {
-    constructor(
-        @InjectRepository(Application) private readonly applicationRepository: Repository<Application>,
-    ) { }
+    constructor(@InjectRepository(Application) private readonly applicationRepository: Repository<Application>) {}
 
     async getAll(): Promise<Application[]> {
         return await this.applicationRepository.find({ relations: ['applicationData', 'applicationData.field'] });
     }
 
-    async get(id: string): Promise<Application | undefined> {
+    async get(id: string): Promise<Application | null> {
         return await this.applicationRepository.findOne({
             where: {
                 applicationId: id,
@@ -23,7 +21,10 @@ export class ApplicationRepository {
     }
 
     async getByUserId(userId: string): Promise<Application[]> {
-        return await this.applicationRepository.find({ where: { userId }, relations: ['applicationData', 'subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType'] });
+        return await this.applicationRepository.find({
+            where: { userId },
+            relations: ['applicationData', 'subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType'],
+        });
     }
 
     async create(applicationData: Partial<Application>): Promise<Application> {
@@ -31,7 +32,7 @@ export class ApplicationRepository {
         return await this.applicationRepository.save(application);
     }
 
-    async update(application: Application): Promise<Application | undefined> {
+    async update(application: Application): Promise<Application | null> {
         await this.applicationRepository.save(application);
         return this.get(application.applicationId);
     }

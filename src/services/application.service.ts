@@ -1,20 +1,21 @@
-import { Injectable, BadRequestException, Logger } from "@nestjs/common";
-import { promises as fsPromises } from "fs";
-import { Application } from "../entity/festival/application.entity";
-import { ApplicationData } from "../entity/festival/application-data.entity";
-import { ApplicationRepository } from "../repositories/application.repository";
-import { ApplicationDataRepository } from "../repositories/application-data.repository";
-import { SubNominationService } from "./sub-nomination.service";
-import { NominationService } from "./nomination.service";
-import { FileService } from "./file.service";
-import { RegisterApplicationDTO } from "../dto/register-application.dto";
-import { UpdateApplicationDTO } from "../dto/update-application.dto";
-import { FieldType } from "../enums/fieldType";
-import { ApplicationState } from "../entity/festival/application.entity";
-import { Field } from "../entity/festival/field.entity";
-import { ApplicationDataDTO } from "../dto/application-data.dto";
-import { UserService } from "./user.service";
-import { withPublicApplicationState } from "../utils/application-public-state";
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { promises as fsPromises } from 'fs';
+import { Application } from '../entity/festival/application.entity';
+import { ApplicationData } from '../entity/festival/application-data.entity';
+import { ApplicationRepository } from '../repositories/application.repository';
+import { ApplicationDataRepository } from '../repositories/application-data.repository';
+import { SubNominationService } from './sub-nomination.service';
+import { NominationService } from './nomination.service';
+import { FileService } from './file.service';
+import { RegisterApplicationDTO } from '../dto/register-application.dto';
+import { UpdateApplicationDTO } from '../dto/update-application.dto';
+import { FieldType } from '../enums/fieldType';
+import { ApplicationState } from '../entity/festival/application.entity';
+import { Field } from '../entity/festival/field.entity';
+import { ApplicationDataDTO } from '../dto/application-data.dto';
+import { UserService } from './user.service';
+import { withPublicApplicationState } from '../utils/application-public-state';
+import { SubNomination } from '../entity/festival/sub-nomination.entity';
 
 @Injectable()
 export class ApplicationService {
@@ -25,7 +26,7 @@ export class ApplicationService {
         private readonly applicationDataRepository: ApplicationDataRepository,
         private readonly fileService: FileService,
         private readonly userService: UserService,
-    ) { }
+    ) {}
 
     async getApplications(): Promise<Application[]> {
         return this.applicationRepository.getAll();
@@ -39,22 +40,21 @@ export class ApplicationService {
     async getApplicationData(applicationId: string): Promise<ApplicationData[]> {
         const applicationData = await this.applicationDataRepository.getByApplicationId(applicationId);
         const application = await this.applicationRepository.get(applicationId);
-        
+
         if (!application || !application.subNomination || !application.subNomination.nomination) {
             return applicationData;
         }
 
         const nominationFields = await this.nominationService.getFields(application.subNomination.nomination.nominationId);
-        
+
         const fieldOrderMap = new Map<string, number>();
         nominationFields.forEach(nf => {
             fieldOrderMap.set(nf.fieldId, nf.order);
         });
 
+        // TODO: check if this works, I think it doesn't in the admin panel in the frontend
         applicationData.forEach(appData => {
-            if (appData.field && fieldOrderMap.has(appData.fieldId)) {
-                appData.field.order = fieldOrderMap.get(appData.fieldId);
-            }
+            appData.field.order = fieldOrderMap.get(appData.fieldId) ?? 0;
         });
 
         return applicationData;
@@ -67,21 +67,27 @@ export class ApplicationService {
         }
 
         if (!userId) {
-            throw new BadRequestException("User is empty");
+            throw new BadRequestException('User is empty');
         }
 
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
         await this.validateApplicationData(application.applicationData, fields);
 
-        const savedApplication = await this.createApplication(userId, subNomination, application.applicationData, fields, subNomination.nomination.fullNameTemplate);
+        const savedApplication = await this.createApplication(
+            userId,
+            subNomination,
+            application.applicationData,
+            fields,
+            subNomination.nomination.fullNameTemplate,
+        );
 
         for (const appData of application.applicationData) {
-            const field = fields.find(f => f.fieldId === appData.fieldId);
-
             await this.createApplicationData(savedApplication, appData);
 
-            if ((field.type === FieldType.UploadImage || field.type === FieldType.UploadMusic) && !!appData.value) {
+            const field = fields.find(f => f.fieldId === appData.fieldId);
+
+            if ((field?.type === FieldType.UploadImage || field?.type === FieldType.UploadMusic) && !!appData.value) {
                 try {
                     await this.fileService.saveApplicationId(appData.value, savedApplication.applicationId);
                 } catch (err) {
@@ -98,11 +104,18 @@ export class ApplicationService {
         }
 
         const user = await this.userService.findById(userId);
-        if (user.userId !== application.userId && !user.isAdmin) {
+        if (user?.userId !== application.userId && !user?.isAdmin) {
             throw new BadRequestException(`Different userId`);
         }
 
-        const subNomination = await this.subNominationService.getSubNominationById(updateApplicationDTO.subNominationId ?? application.subNominationId);
+        const subNomination = await this.subNominationService.getSubNominationById(
+            updateApplicationDTO.subNominationId ?? application.subNominationId,
+        );
+        if (!subNomination) {
+            throw new BadRequestException(
+                `Subnomination not found: ${updateApplicationDTO.subNominationId ?? application.subNominationId}`,
+            );
+        }
         const fields = (await this.nominationService.getFields(subNomination.nomination.nominationId)).map(nomField => nomField.field);
 
         if (updateApplicationDTO.applicationData) {
@@ -131,8 +144,7 @@ export class ApplicationService {
                 if (existingAppData) {
                     existingAppData.value = updatedAppData.value;
                     await this.applicationDataRepository.update(existingAppData);
-                }
-                else {
+                } else {
                     const newAppData = new ApplicationData();
                     newAppData.fieldId = field.fieldId;
                     newAppData.application = application;
@@ -142,44 +154,30 @@ export class ApplicationService {
             }
         }
 
-        const dtos = application.applicationData.map(appData => { return { fieldId: appData.fieldId, value: appData.value }; });
+        const dtos = application.applicationData.map(appData => {
+            return { fieldId: appData.fieldId, value: appData.value };
+        });
 
         application.fullName = this.replacePlaceholders(subNomination.nomination.fullNameTemplate, dtos, fields);
         application.subNomination = subNomination;
-        application.state = 0;
-        // Save the updated application
+        application.state = ApplicationState.New;
+
         await this.applicationRepository.update(application);
     }
 
-    async setPendingState(applicationId: string): Promise<void> {
+    async setApplicationState(applicationId: string, newState: ApplicationState, note?: string): Promise<void> {
         const application = await this.applicationRepository.get(applicationId);
-        application.state = ApplicationState.Pending;
-        application.adminNote = null;
-        await this.applicationRepository.update(application);
-    }
+        if (!application) {
+            throw new BadRequestException(`Application not found: ${applicationId}`);
+        }
 
-    async setInvalidState(applicationId: string, note: string): Promise<void> {
-        const application = await this.applicationRepository.get(applicationId);
-        application.state = ApplicationState.Invalid;
-        application.adminNote = note;
-        await this.applicationRepository.update(application);
-    }
-
-    async setAcceptedState(applicationId: string): Promise<void> {
-        const application = await this.applicationRepository.get(applicationId);
-        application.state = ApplicationState.Accepted;
-        await this.applicationRepository.update(application);
-    }
-
-    async setDeniedState(applicationId: string): Promise<void> {
-        const application = await this.applicationRepository.get(applicationId);
-        application.state = ApplicationState.Denied;
+        application.state = newState;
+        application.adminNote = note && newState === ApplicationState.Invalid ? note : null;
         await this.applicationRepository.update(application);
     }
 
     async getApplicationDataWithFieldValues(fieldCodes: string[]): Promise<{ applicationId: string; value: string }[]> {
-        const result = await this.applicationDataRepository.getApplicationsWithFieldValues(fieldCodes);
-        return result;
+        return await this.applicationDataRepository.getApplicationsWithFieldValues(fieldCodes);
     }
 
     private async validateApplicationData(applicationData: ApplicationDataDTO[], fields: Field[]) {
@@ -207,17 +205,16 @@ export class ApplicationService {
 
     private async createApplication(
         userId: string,
-        subNomination,
+        subNomination: SubNomination,
         applicationData: ApplicationDataDTO[],
         fields: Field[],
-        fullNameTemplate: string
+        fullNameTemplate: string,
     ) {
         const newApplication = new Application();
         newApplication.state = ApplicationState.New;
         newApplication.subNomination = subNomination;
         newApplication.userId = userId;
         newApplication.applicationDate = new Date();
-        // Implement logic to replace placeholders in fullNameTemplate
         newApplication.fullName = this.replacePlaceholders(fullNameTemplate, applicationData, fields);
 
         return this.applicationRepository.create(newApplication);
@@ -227,21 +224,19 @@ export class ApplicationService {
         try {
             const placeholderRegex = /{(\w+)}/g;
 
-            // Replace placeholders in the template
             const replacedTemplate = template.replace(placeholderRegex, (match, placeholder) => {
                 const field = fields.find(f => f.code == placeholder);
-                const data = applicationData.find((item) => item.fieldId === field.fieldId);
-                return data ? data.value : match; // Replace with data.value or keep the original placeholder
+                const data = applicationData.find(item => item.fieldId === field?.fieldId);
+                return data ? data.value : match;
             });
 
             return replacedTemplate;
-        }
-        catch {
-            return "";
+        } catch {
+            return '';
         }
     }
 
-    private async createApplicationData(savedApplication, appData) {
+    private async createApplicationData(savedApplication: Application, appData: ApplicationDataDTO) {
         const newAppData = new ApplicationData();
         newAppData.application = savedApplication;
         newAppData.fieldId = appData.fieldId;

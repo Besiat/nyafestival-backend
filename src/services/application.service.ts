@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { promises as fsPromises } from 'fs';
+import { DataSource } from 'typeorm';
 import { Application } from '../entity/festival/application.entity';
 import { ApplicationData } from '../entity/festival/application-data.entity';
 import { ApplicationRepository } from '../repositories/application.repository';
@@ -15,7 +16,6 @@ import { Field } from '../entity/festival/field.entity';
 import { ApplicationDataDTO } from '../dto/application-data.dto';
 import { UserService } from './user.service';
 import { withPublicApplicationState } from '../utils/application-public-state';
-import { SubNomination } from '../entity/festival/sub-nomination.entity';
 
 @Injectable()
 export class ApplicationService {
@@ -26,6 +26,7 @@ export class ApplicationService {
         private readonly applicationDataRepository: ApplicationDataRepository,
         private readonly fileService: FileService,
         private readonly userService: UserService,
+        private readonly dataSource: DataSource,
     ) {}
 
     async getApplications(): Promise<Application[]> {
@@ -74,16 +75,14 @@ export class ApplicationService {
 
         await this.validateApplicationData(application.applicationData, fields);
 
-        const savedApplication = await this.createApplication(
+        const savedApplication = await this.createApplicationWithData(
             userId,
             subNomination,
             application.applicationData,
             fields,
-            subNomination.nomination.fullNameTemplate,
         );
 
         for (const appData of application.applicationData) {
-            await this.createApplicationData(savedApplication, appData);
 
             const field = fields.find(f => f.fieldId === appData.fieldId);
 
@@ -203,21 +202,37 @@ export class ApplicationService {
         }
     }
 
-    private async createApplication(
+    private async createApplicationWithData(
         userId: string,
-        subNomination: SubNomination,
+        subNomination: Application['subNomination'],
         applicationData: ApplicationDataDTO[],
         fields: Field[],
-        fullNameTemplate: string,
-    ) {
-        const newApplication = new Application();
-        newApplication.state = ApplicationState.New;
-        newApplication.subNomination = subNomination;
-        newApplication.userId = userId;
-        newApplication.applicationDate = new Date();
-        newApplication.fullName = this.replacePlaceholders(fullNameTemplate, applicationData, fields);
+    ): Promise<Application> {
+        return this.dataSource.transaction(async manager => {
+            const newApplication = manager.create(Application, {
+                state: ApplicationState.New,
+                subNomination,
+                userId,
+                applicationDate: new Date(),
+                fullName: this.replacePlaceholders(
+                    subNomination.nomination.fullNameTemplate,
+                    applicationData,
+                    fields,
+                ),
+            });
 
-        return this.applicationRepository.create(newApplication);
+            const savedApplication = await manager.save(Application, newApplication);
+            const newApplicationData = applicationData.map(appData =>
+                manager.create(ApplicationData, {
+                    application: savedApplication,
+                    fieldId: appData.fieldId,
+                    value: appData.value,
+                }),
+            );
+
+            await manager.save(ApplicationData, newApplicationData);
+            return savedApplication;
+        });
     }
 
     private replacePlaceholders(template: string, applicationData: ApplicationDataDTO[], fields: Field[]): string {
@@ -234,13 +249,5 @@ export class ApplicationService {
         } catch {
             return '';
         }
-    }
-
-    private async createApplicationData(savedApplication: Application, appData: ApplicationDataDTO) {
-        const newAppData = new ApplicationData();
-        newAppData.application = savedApplication;
-        newAppData.fieldId = appData.fieldId;
-        newAppData.value = appData.value;
-        return this.applicationDataRepository.create(newAppData);
     }
 }

@@ -5,7 +5,8 @@ import { ApplicationService } from '../services/application.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { Throttle } from '@nestjs/throttler';
 import { Application } from '../entity/festival/application.entity';
-import { UpdateApplicationDTO } from '../dto/update-application.dto';
+import { UpdateApplicationByUserDTO } from '../dto/update-application-by-user.dto';
+import { UpdateApplicationByAdminDTO } from '../dto/update-application-by-admin.dto';
 import { ApplicationData } from '../entity/festival/application-data.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SetApplicationStateDTO } from '../dto/set-application-state.dto';
@@ -31,13 +32,29 @@ export class ApplicationController {
     @Put()
     @Throttle({ default: { limit: 1, ttl: 5000 } })
     @ApiOperation({ operationId: 'update', summary: 'Update an application' })
-    @ApiBody({ type: UpdateApplicationDTO, description: 'Application data to update' })
+    @ApiBody({ type: UpdateApplicationByUserDTO, description: 'Application data to update' })
     @ApiResponse({ status: 200, description: 'Application updated successfully' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async updateApplication(@Body() application: UpdateApplicationDTO, @Request() req: AuthenticatedRequest): Promise<void> {
+    async updateApplication(@Body() application: UpdateApplicationByUserDTO, @Request() req: AuthenticatedRequest): Promise<void> {
         const userId = req.user.userId;
-        await this.applicationService.updateApplication(userId, application);
+        await this.applicationService.updateApplicationByUser(userId, application);
+    }
+
+    @Put(':applicationId/admin')
+    @ApiOperation({ operationId: 'updateApplicationByAdmin', summary: 'Update an application as admin' })
+    @ApiParam({ name: 'applicationId', description: 'Application ID' })
+    @ApiBody({ type: UpdateApplicationByAdminDTO, description: 'Application data to update as admin' })
+    @ApiResponse({ status: 200, description: 'Application updated successfully' })
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @ApiBearerAuth()
+    async updateApplicationByAdmin(
+        @Param('applicationId') applicationId: string,
+        @Body() application: UpdateApplicationByAdminDTO,
+        @Request() req: AuthenticatedRequest,
+    ): Promise<void> {
+        const userId = req.user.userId;
+        await this.applicationService.updateApplicationByAdmin(userId, applicationId, application);
     }
 
     @Post(':applicationId/state')

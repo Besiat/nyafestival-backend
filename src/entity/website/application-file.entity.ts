@@ -4,27 +4,27 @@ import { User } from './user';
 
 @Entity('files')
 export class ApplicationFile {
-  @PrimaryGeneratedColumn('uuid')
-  @ApiProperty()
-  id: string;
+    @PrimaryGeneratedColumn('uuid')
+    @ApiProperty()
+    id: string;
 
-  @Column()
-  @ApiProperty()
-  fileName: string;
+    @Column()
+    @ApiProperty()
+    fileName: string;
 
-  @Column()
-  @ApiProperty()
-  userId: number;
+    @Column()
+    @ApiProperty()
+    userId: string;
 
-  @ManyToOne(() => User) // Assuming you have a UserEntity to represent the user
-  @JoinColumn({ name: 'userId' })
-  user: User;
+    @ManyToOne(() => User) // Assuming you have a UserEntity to represent the user
+    @JoinColumn({ name: 'userId' })
+    user: User;
 
-  @CreateDateColumn()
-  @ApiProperty()
-  uploadDate: Date;
+    @CreateDateColumn()
+    @ApiProperty()
+    uploadDate: Date;
 
-  @Column({ nullable: true })
-  @ApiProperty({ required: false })
-  applicationId?: string;
+    @Column({ nullable: true })
+    @ApiProperty({ required: false })
+    applicationId?: string;
 }

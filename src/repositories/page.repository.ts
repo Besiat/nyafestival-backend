@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Page } from '../entity/website/page.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -11,6 +11,22 @@ export class PageRepository {
 
     async getAll(): Promise<Page[]> {
         return await this.pageRepository.find();
+    }
+
+    async getContestPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title'>[]> {
+        return await this.pageRepository.find({
+            select: {
+                pageId: true,
+                route: true,
+                title: true,
+            },
+            where: {
+                route: Like('contest%'),
+            },
+            order: {
+                order: 'ASC',
+            },
+        });
     }
 
     async get(id: string): Promise<Page | undefined> {

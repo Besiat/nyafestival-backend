@@ -13,9 +13,18 @@ export class PagesController {
   @Get()
   @ApiOperation({ operationId: 'findAll', summary: 'Get all pages' })
   @ApiResponse({ status: 200, description: 'Returns all pages', type: Page, isArray: true })
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
     async findAll(): Promise<Page[]> {
         return this.pagesService.getAllPages();
     }
+
+  @Get('contest')
+  @ApiOperation({ operationId: 'findContestPages', summary: 'Get lightweight contest pages for public menu' })
+  @ApiResponse({ status: 200, description: 'Returns lightweight contest pages', isArray: true })
+  async findContestPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title'>[]> {
+      return this.pagesService.getContestPages();
+  }
 
   @Get(':route')
   @ApiOperation({ operationId: 'findOne', summary: 'Get a page by route' })

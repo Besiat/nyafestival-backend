@@ -10,6 +10,10 @@ export class PageService {
         return await this.pageRepository.getAll();
     }
 
+    async getContestPages() {
+        return await this.pageRepository.getContestPages();
+    }
+
     async getPageById(id: string) {
         return await this.pageRepository.get(id);
     }

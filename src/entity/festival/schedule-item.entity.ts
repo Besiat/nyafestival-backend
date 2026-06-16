@@ -17,7 +17,16 @@ export class ScheduleItem {
     block: Block;
 
     @Column()
+    scheduleContainerId: string;
+
+    @Column({ nullable: true })
     applicationId: string;
+
+    @Column({ nullable: true })
+    title: string;
+
+    @Column({ nullable: true })
+    subtitle: string;
 
     @Column()
     order: number;

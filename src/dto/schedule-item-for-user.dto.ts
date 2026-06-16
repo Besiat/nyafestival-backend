@@ -1,4 +1,4 @@
-import { BlockForScheduleItemForUserDTO } from "./block-for-schedule-item-for-user.dto";
+import { BlockForScheduleItemForUserDTO } from './block-for-schedule-item-for-user.dto';
 
 export class ScheduleItemForUserDTO {
     scheduleItemId: string;
@@ -9,9 +9,15 @@ export class ScheduleItemForUserDTO {
 
     block: BlockForScheduleItemForUserDTO;
 
-    applicationId: string;
+    scheduleContainerId: string;
+
+    applicationId?: string;
+
+    title?: string;
+
+    subtitle?: string;
 
     order: number;
 
     liked: boolean;
-} 
+}

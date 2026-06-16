@@ -1,13 +1,18 @@
 // create-block.dto.ts
 
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBlockDTO {
     @ApiProperty({ description: 'Nomination ID', example: 'someNominationId' })
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    nominationId: string;
+    nominationId?: string;
+
+    @ApiPropertyOptional({ description: 'Schedule container ID', example: 'someScheduleContainerId' })
+    @IsOptional()
+    @IsString()
+    scheduleContainerId?: string;
 
     @ApiProperty({ description: 'Name of the block', example: 'Morning Session' })
     @IsNotEmpty()
@@ -20,7 +25,17 @@ export class CreateBlockDTO {
     order: number;
 
     @ApiProperty({ description: 'Duration of the block in seconds', example: 3600 })
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
-    durationInSeconds: number;
+    durationInSeconds?: number;
+
+    @ApiPropertyOptional({ description: 'Explicit start time', example: '14:00' })
+    @IsOptional()
+    @IsString()
+    startTime?: string;
+
+    @ApiPropertyOptional({ description: 'Explicit end time', example: '14:30' })
+    @IsOptional()
+    @IsString()
+    endTime?: string;
 }

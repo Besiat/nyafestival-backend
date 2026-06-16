@@ -46,6 +46,7 @@ import { ConfigController } from './controllers/config.controller'
 import { ScheduleController } from './controllers/schedule.controller'
 import { Block } from './entity/festival/block.entity'
 import { ScheduleItem } from './entity/festival/schedule-item.entity'
+import { ScheduleContainer } from './entity/festival/schedule-container.entity'
 import { ScheduleService } from './services/schedule.service'
 import { VotingService } from './services/voting.service'
 import { VotingController } from './controllers/voting.controller'
@@ -101,6 +102,7 @@ loadEnv()
       NominationField,
       Config,
       Block,
+      ScheduleContainer,
       ScheduleItem,
       Vote,
       StageVote,

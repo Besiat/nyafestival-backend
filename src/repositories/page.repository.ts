@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Like, Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { Page } from '../entity/website/page.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -13,18 +13,22 @@ export class PageRepository {
         return await this.pageRepository.find();
     }
 
-    async getContestPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title'>[]> {
+    async getCosplayPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title' | 'order'>[]> {
         return await this.pageRepository.find({
             select: {
                 pageId: true,
                 route: true,
                 title: true,
+                order: true,
             },
             where: {
-                route: Like('contest%'),
+                route: Raw((column) => `${column} ~ :cosplayRoutePattern`, {
+                    cosplayRoutePattern: '^contest/cosplay/[^/]+$',
+                }),
             },
             order: {
-                order: 'ASC',
+                order: { direction: 'ASC', nulls: 'LAST' },
+                route: 'ASC',
             },
         });
     }

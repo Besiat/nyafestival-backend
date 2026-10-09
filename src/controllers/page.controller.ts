@@ -1,15 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, NotFoundException, UseGuards } from '@nestjs/common';
 import { PageService } from '../services/page.service';
 import { Page } from '../entity/website/page.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin-guard';
-import { EmailService } from '../services/email.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 
 @Controller('api/pages')
 @ApiTags('Pages') // Optional: Group your API under a tag
 export class PagesController {
-    constructor(private readonly pagesService: PageService, private readonly emailService: EmailService) { }
+    constructor(private readonly pagesService: PageService) { }
   @Get()
   @ApiOperation({ operationId: 'findAll', summary: 'Get all pages' })
   @ApiResponse({ status: 200, description: 'Returns all pages', type: Page, isArray: true })
@@ -19,19 +18,26 @@ export class PagesController {
         return this.pagesService.getAllPages();
     }
 
-  @Get('contest')
-  @ApiOperation({ operationId: 'findContestPages', summary: 'Get lightweight contest pages for public menu' })
-  @ApiResponse({ status: 200, description: 'Returns lightweight contest pages', isArray: true })
-  async findContestPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title'>[]> {
-      return this.pagesService.getContestPages();
+  @Get('contest/cosplay/children')
+  @ApiOperation({ operationId: 'findCosplayPages', summary: 'Get direct children of the cosplay page' })
+  @ApiResponse({ status: 200, description: 'Returns cosplay nomination pages ordered by order and route', isArray: true })
+  async findCosplayPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title' | 'order'>[]> {
+      return this.pagesService.getCosplayPages();
   }
 
   @Get(':route')
   @ApiOperation({ operationId: 'findOne', summary: 'Get a page by route' })
   @ApiParam({ name: 'route', type: String, description: 'Page Route' })
   @ApiResponse({ status: 200, description: 'Returns a page by route', type: Page })
-  async findOne(@Param('route') route: string): Promise<Page | undefined> {
-      return this.pagesService.getPageByRoute(route);
+  @ApiResponse({ status: 404, description: 'Page not found' })
+  async findOne(@Param('route') route: string): Promise<Page> {
+      const page = await this.pagesService.getPageByRoute(route);
+
+      if (!page) {
+          throw new NotFoundException('Page not found');
+      }
+
+      return page;
   }
 
   @Post()

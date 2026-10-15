@@ -75,6 +75,7 @@ export class ApplicationService {
 
         const fields = await this.getNominationFields(subNomination);
 
+        this.validateCheckboxApplicationData(application.applicationData, fields);
         const applicationData = application.applicationData.filter(data => data.value?.trim());
         const applicationDataFiles = this.getUploadApplicationData(applicationData, fields);
 
@@ -105,6 +106,7 @@ export class ApplicationService {
 
         if (updateApplicationData) {
             this.validateExtraApplicationData(updateApplicationData, fields);
+            this.validateCheckboxApplicationData(updateApplicationData, fields);
             const updatedApplicationData = this.mergeApplicationData(application.applicationData, updateApplicationData);
             this.validateRequiredApplicationData(updatedApplicationData, fields);
 
@@ -160,6 +162,7 @@ export class ApplicationService {
 
         if (updateApplicationData) {
             const fields = await this.fieldService.getAllFields();
+            this.validateCheckboxApplicationData(updateApplicationData, fields);
             const applicationDataFiles = this.getUploadApplicationData(updateApplicationData, fields);
             await this.validateFiles(applicationDataFiles);
 
@@ -273,7 +276,8 @@ export class ApplicationService {
         for (const field of fields.filter(f => f.required)) {
             const applicationDataItem = applicationData.find(appData => appData.fieldId === field.fieldId);
             // if required file upload failed - do not throw exception, let the application be created and then edited later
-            if (!this.isUploadField(field) && !applicationDataItem?.value?.trim()) {
+            const value = applicationDataItem?.value;
+            if (!this.isUploadField(field) && (field.type === FieldType.Checkbox ? value !== 'true' : !value?.trim())) {
                 throw new BadRequestException(`Field ${field.code} is required!`);
             }
         }
@@ -284,6 +288,21 @@ export class ApplicationService {
         const invalidData = applicationData.find(data => !fields.some(f => f.fieldId === data.fieldId));
         if (invalidData) {
             throw new BadRequestException(`Field not found: ${invalidData.fieldId}`);
+        }
+    }
+
+    private validateCheckboxApplicationData(applicationData: ApplicationDataDTO[], fields: Field[]) {
+        for (const data of applicationData) {
+            const field = fields.find(f => f.fieldId === data.fieldId);
+            if (field?.type !== FieldType.Checkbox) {
+                continue;
+            }
+            if (data.value !== 'true' && data.value !== 'false') {
+                throw new BadRequestException(`Field ${field.code} must be true or false!`);
+            }
+            if (field.required && data.value !== 'true') {
+                throw new BadRequestException(`Field ${field.code} must be confirmed!`);
+            }
         }
     }
 

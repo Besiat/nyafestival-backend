@@ -3,5 +3,6 @@ export enum FieldType {
   TextArea = 'textarea',
   UploadImage = 'upload-image',
   UploadMusic = 'upload-music',
-  Select = 'select'
+  Select = 'select',
+  Checkbox = 'checkbox'
 }

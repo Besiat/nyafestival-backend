@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { SubNomination } from './sub-nomination.entity';
 import { User } from '../website/user';
 import { ApplicationData } from './application-data.entity';
+import { ApplicationParticipant } from './application-participant.entity';
 
 @Entity()
 export class Application {
@@ -24,6 +25,19 @@ export class Application {
 
     @OneToMany(() => ApplicationData, applicationData => applicationData.application)
     applicationData: ApplicationData[];
+
+    @OneToMany(() => ApplicationParticipant, participant => participant.application)
+    participants: ApplicationParticipant[];
+
+    @Column({ type: 'uuid', nullable: true })
+    sourceParticipantId: string | null;
+
+    @ManyToOne(() => ApplicationParticipant)
+    @JoinColumn({ name: 'sourceParticipantId' })
+    sourceParticipant: ApplicationParticipant | null;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    withdrawnAt: Date | null;
 
     @Column({ nullable: true })
     adminNote?: string | null;

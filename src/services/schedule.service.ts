@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ScheduleItem } from '../entity/festival/schedule-item.entity';
 import { Application } from '../entity/festival/application.entity';
@@ -9,6 +9,7 @@ import { StageVote } from '../entity/festival/stage-vote.entity';
 import { ScheduleItemForUserDTO } from '../dto/schedule-item-for-user.dto';
 import { ScheduleContainer } from '../entity/festival/schedule-container.entity';
 import { ScheduleContainerDTO, UpsertScheduleContainerDTO } from '../dto/schedule-container.dto';
+import { ApplicationScheduleAssignmentDTO } from '../dto/application-schedule-assignment.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -28,8 +29,9 @@ export class ScheduleService {
         const newScheduleItem = this.scheduleItemsRepository.create();
 
         if (applicationId) {
-            const application = await this.applicationRepository.findOne({ where: { applicationId } });
+            const application = await this.applicationRepository.findOne({ where: { applicationId }, relations: ['subNomination', 'subNomination.nomination'] });
             if (!application) throw new Error(`Application ${applicationId} doesn't exist`);
+            if (application.sourceParticipantId || application.withdrawnAt || application.subNomination.nomination.applicationMode === 'supplementary') throw new BadRequestException('Дополнительная анкета не является сценическим номером');
             const alreadyExists = await this.scheduleItemsRepository.findOne({
                 where: { applicationId, scheduleContainerId: block.scheduleContainerId },
             });
@@ -89,6 +91,67 @@ export class ScheduleService {
         return this.scheduleContainerRepository.find({ order: { order: 'ASC' } });
     }
 
+    async getApplicationScheduleAssignments(
+        applicationIds: string[],
+    ): Promise<Map<string, ApplicationScheduleAssignmentDTO[]>> {
+        const assignmentsByApplicationId = new Map<string, ApplicationScheduleAssignmentDTO[]>();
+        if (applicationIds.length === 0) {
+            return assignmentsByApplicationId;
+        }
+
+        const containers = await this.scheduleContainerRepository
+            .createQueryBuilder('container')
+            .leftJoinAndSelect('container.blocks', 'blocks')
+            .leftJoinAndSelect(
+                'blocks.scheduleItems',
+                'scheduleItems',
+                'scheduleItems.applicationId IN (:...applicationIds)',
+                { applicationIds },
+            )
+            .orderBy('container.order')
+            .addOrderBy('blocks.order')
+            .addOrderBy('scheduleItems.order')
+            .getMany();
+
+        let assignmentOrder = 0;
+        for (const container of containers) {
+            const blocks = [...(container.blocks ?? [])].sort((a, b) => a.order - b.order);
+            const blockStartTimes = this.getBlockStartTimes(container, blocks);
+            const blockNumbers = this.getBlockNumbers(blocks);
+
+            for (const block of blocks) {
+                const scheduleItems = [...(block.scheduleItems ?? [])].sort((a, b) => a.order - b.order);
+                for (const scheduleItem of scheduleItems) {
+                    if (!scheduleItem.applicationId) {
+                        continue;
+                    }
+
+                    const blockNumber = blockNumbers.get(block.blockId);
+                    const time = blockStartTimes.get(block.blockId);
+                    const assignment = new ApplicationScheduleAssignmentDTO();
+                    assignment.scheduleItemId = scheduleItem.scheduleItemId;
+                    assignment.scheduleContainerId = container.scheduleContainerId;
+                    assignment.containerCode = container.code;
+                    assignment.containerName = container.name;
+                    assignment.blockId = block.blockId;
+                    assignment.blockName = block.name;
+                    assignment.blockNumber = blockNumber;
+                    assignment.time = time;
+                    assignment.endTime = container.timeMode === 'explicit' ? block.endTime : undefined;
+                    assignment.label = this.getScheduleBlockLabel(block.name, time, blockNumber);
+                    assignment.order = assignmentOrder;
+                    assignmentOrder += 1;
+
+                    const applicationAssignments = assignmentsByApplicationId.get(scheduleItem.applicationId) ?? [];
+                    applicationAssignments.push(assignment);
+                    assignmentsByApplicationId.set(scheduleItem.applicationId, applicationAssignments);
+                }
+            }
+        }
+
+        return assignmentsByApplicationId;
+    }
+
     async createScheduleContainer(data: UpsertScheduleContainerDTO): Promise<void> {
         const container = this.scheduleContainerRepository.create(data);
         await this.scheduleContainerRepository.save(container);
@@ -120,6 +183,60 @@ export class ScheduleService {
             .orderBy('block.order')
             .addOrderBy('scheduleItems.order')
             .getMany();
+    }
+
+    private getBlockStartTimes(container: ScheduleContainer, blocks: Block[]): Map<string, string | undefined> {
+        const blockStartTimes = new Map<string, string | undefined>();
+
+        if (container.timeMode === 'none') {
+            return blockStartTimes;
+        }
+
+        if (container.timeMode === 'explicit') {
+            blocks.forEach(block => blockStartTimes.set(block.blockId, block.startTime));
+            return blockStartTimes;
+        }
+
+        let time = this.getTimeInMinutes(container.defaultStartTime ?? '12:00');
+        for (const block of blocks) {
+            blockStartTimes.set(block.blockId, this.formatTime(time));
+            time += Math.floor((block.durationInSeconds ?? 0) / 60);
+        }
+
+        return blockStartTimes;
+    }
+
+    private getBlockNumbers(blocks: Block[]): Map<string, number | undefined> {
+        const countsByNominationId = new Map<string, number>();
+        const blockNumbers = new Map<string, number | undefined>();
+
+        for (const block of blocks) {
+            if (!block.nominationId) {
+                blockNumbers.set(block.blockId, undefined);
+                continue;
+            }
+
+            const blockNumber = (countsByNominationId.get(block.nominationId) ?? 0) + 1;
+            countsByNominationId.set(block.nominationId, blockNumber);
+            blockNumbers.set(block.blockId, blockNumber);
+        }
+
+        return blockNumbers;
+    }
+
+    private getScheduleBlockLabel(blockName: string, startTime?: string, blockNumber?: number): string {
+        return [startTime, blockName, blockNumber ? `${blockNumber} блок` : undefined].filter(Boolean).join(' ');
+    }
+
+    private getTimeInMinutes(value: string): number {
+        const [hours = 12, minutes = 0] = value.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    private formatTime(timeInMinutes: number): string {
+        const hours = Math.floor(timeInMinutes / 60);
+        const minutes = timeInMinutes % 60;
+        return `${hours}:${minutes < 10 ? `0${minutes}` : minutes}`;
     }
 
     private async mapBlocksToDTOs(blocks: Block[], userId?: string): Promise<BlockForScheduleItemForUserDTO[]> {

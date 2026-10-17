@@ -67,6 +67,8 @@ import { NominationType } from './entity/festival/nomination-type.entity'
 import { NominationTypeRepository } from './repositories/nomination-type.repository'
 import { NominationTypeController } from './controllers/nomination-type.controller'
 import { NominationTypeService } from './services/nomination-type.service'
+import { ApplicationParticipant } from './entity/festival/application-participant.entity'
+import { LinkedApplicationService } from './services/linked-application.service'
 
 loadEnv()
 
@@ -98,6 +100,7 @@ loadEnv()
       Field,
       ApplicationFile,
       Application,
+      ApplicationParticipant,
       ApplicationData,
       NominationField,
       Config,
@@ -153,6 +156,7 @@ loadEnv()
     SubNominationService,
     FileService,
     ApplicationService,
+    LinkedApplicationService,
     ApplicationRepository,
     ApplicationDataRepository,
     ConfigService,

@@ -36,13 +36,13 @@ export class NominationController {
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
     async findAllApplicationsPublic(): Promise<NominationPublicDTO[]> {
         const nominations = (await this.nominationService.getAllNominationsWithApplications());
-        const result = nominations.map(nomination => ({
+        const result = nominations.filter(nomination => nomination.applicationMode !== 'supplementary').map(nomination => ({
             id: randomUUID(),
             name: nomination.name,
             subNominations: nomination.subNominations.map(subNomination => ({
                 id: randomUUID(),
                 name: subNomination.name,
-                applications: subNomination.applications.map(application => ({
+                applications: subNomination.applications.filter(application => !application.sourceParticipantId && !application.withdrawnAt).map(application => ({
                     id: randomUUID(),
                     fullName: application.fullName,
                     status: getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),

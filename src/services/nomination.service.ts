@@ -25,7 +25,14 @@ export class NominationService {
     }
 
     async getNominationById(id: string) {
-        return await this.nominationRepository.get(id);
+        const nomination = await this.nominationRepository.get(id);
+        if (!nomination) throw new BadRequestException('Номинация не найдена');
+        const supplementary = (await this.nominationRepository.getAll()).filter(item => item.applicationMode === 'supplementary' && item.allowedSourceNominationIds.includes(id));
+        // Use the existing FIO field for presentation; answers still belong to participants.
+        const participantNameField = nomination.minParticipants > 0
+            ? await this.fieldRepository.getByCode('FIO')
+            : undefined;
+        return { ...nomination, participantNameField, supplementaryNominations: await Promise.all(supplementary.map(item => this.nominationRepository.get(item.nominationId))) };
     }
 
     async createNomination(nominationData: Partial<Nomination>) {
@@ -69,6 +76,7 @@ export class NominationService {
         if (!field) {
             throw new Error('Field not found');
         }
+        if (['FIO', 'fio_group'].includes(field.code)) throw new BadRequestException('ФИО заполняется в составе участников. Настройте количество участников номинации.');
 
         if (nomination.nominationFields.some(p => p.fieldId === fieldId)) {
             throw new Error('Nomination already contains this field');

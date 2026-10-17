@@ -8,7 +8,7 @@ export class ApplicationRepository {
     constructor(@InjectRepository(Application) private readonly applicationRepository: Repository<Application>) {}
 
     async getAll(): Promise<Application[]> {
-        return await this.applicationRepository.find({ relations: ['applicationData', 'applicationData.field'] });
+        return await this.applicationRepository.find({ relations: ['applicationData', 'applicationData.field', 'participants', 'sourceParticipant', 'subNomination', 'subNomination.nomination'] });
     }
 
     async get(id: string): Promise<Application | null> {
@@ -16,14 +16,14 @@ export class ApplicationRepository {
             where: {
                 applicationId: id,
             },
-            relations: ['subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType', 'applicationData'],
+            relations: ['subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType', 'applicationData', 'participants', 'sourceParticipant'],
         });
     }
 
     async getByUserId(userId: string): Promise<Application[]> {
         return await this.applicationRepository.find({
             where: { userId },
-            relations: ['applicationData', 'subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType'],
+            relations: ['applicationData', 'applicationData.field', 'subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType', 'participants', 'sourceParticipant'],
         });
     }
 

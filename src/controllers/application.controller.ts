@@ -1,7 +1,7 @@
 import { Controller, Post, Body, UseGuards, Request, Param, Get, Put, ValidationPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterApplicationDTO } from '../dto/register-application.dto';
-import { ApplicationService } from '../services/application.service';
+import { ApplicationService, ApplicationWithScheduleAssignments } from '../services/application.service';
 import { JwtAuthGuard } from '../guards/jwt-guard';
 import { Throttle } from '@nestjs/throttler';
 import { Application } from '../entity/festival/application.entity';
@@ -24,9 +24,9 @@ export class ApplicationController {
     @ApiResponse({ status: 201, description: 'Registers a new application' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async registerApplication(@Body() application: RegisterApplicationDTO, @Request() req: AuthenticatedRequest): Promise<void> {
+    async registerApplication(@Body() application: RegisterApplicationDTO, @Request() req: AuthenticatedRequest) {
         const userId = req.user.userId;
-        await this.applicationService.registerApplication(userId, application);
+        return this.applicationService.registerApplication(userId, application);
     }
 
     @Put()
@@ -75,7 +75,7 @@ export class ApplicationController {
     @ApiBearerAuth()
     @Get('userApplications')
     @ApiResponse({ status: 200 })
-    async getApplications(@Request() req: AuthenticatedRequest): Promise<Application[]> {
+    async getApplications(@Request() req: AuthenticatedRequest): Promise<ApplicationWithScheduleAssignments[]> {
         return await this.applicationService.getByUserId(req.user.userId);
     }
 
@@ -110,6 +110,6 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'List of application data with fio values' })
     @UseGuards(JwtAuthGuard, AdminGuard)
     async getFioApplicationData(): Promise<{ applicationId: string; value: string }[]> {
-        return this.applicationService.getApplicationDataWithFieldValues(['FIO', 'fio_group']);
+        return this.applicationService.getParticipantNames();
     }
 }

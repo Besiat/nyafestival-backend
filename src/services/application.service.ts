@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { promises as fsPromises } from 'fs';
 import { DataSource } from 'typeorm';
 import { Application } from '../entity/festival/application.entity';
+import { getParticipantName } from '../utils/participant-name';
 import { ApplicationData } from '../entity/festival/application-data.entity';
 import { ApplicationRepository } from '../repositories/application.repository';
 import { ApplicationDataRepository } from '../repositories/application-data.repository';
@@ -14,10 +15,18 @@ import { FieldType } from '../enums/fieldType';
 import { ApplicationState } from '../entity/festival/application.entity';
 import { Field } from '../entity/festival/field.entity';
 import { ApplicationDataDTO } from '../dto/application-data.dto';
+import { LinkedApplicationService } from './linked-application.service';
+import { ApplicationParticipant } from '../entity/festival/application-participant.entity';
 import { UserService } from './user.service';
 import { withPublicApplicationState } from '../utils/application-public-state';
 import { FieldService } from './field.service';
 import { UpdateApplicationByAdminDTO } from '../dto/update-application-by-admin.dto';
+import { ScheduleService } from './schedule.service';
+import { ApplicationScheduleAssignmentDTO } from '../dto/application-schedule-assignment.dto';
+
+export type ApplicationWithScheduleAssignments = Application & {
+    scheduledItems: ApplicationScheduleAssignmentDTO[];
+};
 
 @Injectable()
 export class ApplicationService {
@@ -32,15 +41,51 @@ export class ApplicationService {
         private readonly fieldService: FieldService,
         private readonly userService: UserService,
         private readonly dataSource: DataSource,
+        private readonly scheduleService: ScheduleService,
+        private readonly linkedApplicationService: LinkedApplicationService,
     ) {}
 
     async getApplications(): Promise<Application[]> {
         return this.applicationRepository.getAll();
     }
 
-    async getByUserId(userId: string): Promise<Application[]> {
+    async getByUserId(userId: string): Promise<ApplicationWithScheduleAssignments[]> {
         const applications = await this.applicationRepository.getByUserId(userId);
-        return applications.map(withPublicApplicationState);
+        const publicApplications = applications.map(application => {
+            const parent = applications.find(item => item.applicationId === application.sourceParticipant?.applicationId);
+            const visibility = (parent ?? application).subNomination?.nomination?.nominationType?.showAccepted;
+            const presented = withPublicApplicationState(application, visibility);
+            const parentState = parent ? withPublicApplicationState(parent).state : undefined;
+            return {
+                ...presented,
+                participants: (application.participants ?? []).filter(p => !p.removedAt).sort((a, b) => a.order - b.order),
+                parentApplicationId: application.sourceParticipant?.applicationId ?? null,
+                parentFullName: parent?.fullName,
+                eligible: application.sourceParticipantId
+                    ? !application.withdrawnAt &&
+                      !parent?.withdrawnAt &&
+                      !application.sourceParticipant?.removedAt &&
+                      application.subNomination?.nomination?.applicationMode === 'supplementary' &&
+                      application.subNomination.nomination.allowedSourceNominationIds.includes(
+                          parent?.subNomination?.nomination?.nominationId,
+                      ) &&
+                      presented.state === ApplicationState.Accepted &&
+                      parentState === ApplicationState.Accepted
+                    : undefined,
+            };
+        });
+        const acceptedApplicationIds = publicApplications
+            .filter(
+                application =>
+                    !application.sourceParticipantId && !application.withdrawnAt && application.state === ApplicationState.Accepted,
+            )
+            .map(application => application.applicationId);
+        const assignmentsByApplicationId = await this.scheduleService.getApplicationScheduleAssignments(acceptedApplicationIds);
+
+        return publicApplications.map(application => ({
+            ...application,
+            scheduledItems: assignmentsByApplicationId.get(application.applicationId) ?? [],
+        }));
     }
 
     async getApplicationData(applicationId: string): Promise<ApplicationData[]> {
@@ -73,6 +118,12 @@ export class ApplicationService {
 
         const subNomination = await this.getSubNominationOrThrow(application.subNominationId);
 
+        if (subNomination.nomination.applicationMode === 'supplementary')
+            throw new BadRequestException('Хиноде подаётся через основное дефиле');
+        if (application.participants !== undefined || subNomination.nomination.minParticipants > 0) {
+            return this.linkedApplicationService.save(userId, application);
+        }
+
         const fields = await this.getNominationFields(subNomination);
 
         this.validateCheckboxApplicationData(application.applicationData, fields);
@@ -89,6 +140,12 @@ export class ApplicationService {
 
     async updateApplicationByUser(userId: string, updateApplicationDTO: UpdateApplicationByUserDTO): Promise<void> {
         const application = await this.getApplicationOrThrow(updateApplicationDTO.applicationId);
+
+        if (application.sourceParticipantId) throw new BadRequestException('Редактируйте анкету в составе основной заявки');
+        if (updateApplicationDTO.participants !== undefined || application.subNomination.nomination.minParticipants > 0) {
+            await this.linkedApplicationService.save(userId, updateApplicationDTO);
+            return;
+        }
 
         const user = await this.userService.findById(userId);
         if (user?.userId !== application.userId) {
@@ -151,12 +208,32 @@ export class ApplicationService {
     ): Promise<void> {
         const application = await this.getApplicationOrThrow(applicationId);
 
+        if (
+            updateApplicationDTO.participants !== undefined ||
+            (!application.sourceParticipantId && application.subNomination.nomination.minParticipants > 0)
+        ) {
+            await this.linkedApplicationService.save(userId, { ...updateApplicationDTO, applicationId }, true);
+            return;
+        }
+        if (
+            application.sourceParticipantId &&
+            updateApplicationDTO.subNominationId &&
+            updateApplicationDTO.subNominationId !== application.subNominationId
+        )
+            throw new BadRequestException('Перемещение связанной анкеты запрещено');
+
         const subNominationId = updateApplicationDTO.subNominationId ?? application.subNominationId;
         const subNomination = await this.getSubNominationOrThrow(subNominationId);
 
         // keep empty values to allow clear the field
         const updateApplicationData = updateApplicationDTO.applicationData;
         const nominationFields = await this.getNominationFields(subNomination);
+        if (!application.sourceParticipantId && subNomination.nomination.applicationMode === 'supplementary')
+            throw new BadRequestException('Нельзя переместить основную заявку во вспомогательный отбор');
+        if (subNominationId !== application.subNominationId && application.subNomination.nomination.minParticipants > 0) {
+            await this.linkedApplicationService.save(application.userId, { ...updateApplicationDTO, applicationId }, true);
+            return;
+        }
 
         const fileIdsToDelete: string[] = [];
 
@@ -184,6 +261,12 @@ export class ApplicationService {
                 subNomination.nomination.fullNameTemplate,
                 this.getApplicationDataDtos(application),
                 nominationFields,
+                application.sourceParticipant
+                    ? [getParticipantName(application.sourceParticipant)]
+                    : (application.participants ?? [])
+                          .filter(p => !p.removedAt)
+                          .sort((a, b) => a.order - b.order)
+                          .map(getParticipantName),
             );
         } else {
             application.fullName = updateApplicationDTO.fullName ?? application.fullName;
@@ -201,6 +284,20 @@ export class ApplicationService {
         application.state = newState;
         application.adminNote = note && newState === ApplicationState.Invalid ? note : null;
         await this.applicationRepository.update(application);
+    }
+
+    async getParticipantNames(): Promise<{ applicationId: string; value: string }[]> {
+        const participants = await this.dataSource
+            .getRepository(ApplicationParticipant)
+            .createQueryBuilder('participant')
+            .innerJoin('participant.application', 'application')
+            .where('application.state = :state', { state: ApplicationState.Accepted })
+            .andWhere('application."sourceParticipantId" IS NULL AND application."withdrawnAt" IS NULL AND participant."removedAt" IS NULL')
+            .orderBy('participant.order', 'ASC')
+            .getMany();
+        const groups = new Map<string, string[]>();
+        participants.forEach(p => groups.set(p.applicationId, [...(groups.get(p.applicationId) ?? []), getParticipantName(p)]));
+        return [...groups].map(([applicationId, names]) => ({ applicationId, value: names.filter(Boolean).join(', ') }));
     }
 
     async getApplicationDataWithFieldValues(fieldCodes: string[]): Promise<{ applicationId: string; value: string }[]> {
@@ -375,11 +472,12 @@ export class ApplicationService {
         return field?.type === FieldType.UploadImage || field?.type === FieldType.UploadMusic;
     }
 
-    private replacePlaceholders(template: string, applicationData: ApplicationDataDTO[], fields: Field[]): string {
+    private replacePlaceholders(template: string, applicationData: ApplicationDataDTO[], fields: Field[], names: string[] = []): string {
         try {
             const placeholderRegex = /{(\w+)}/g;
 
             const replacedTemplate = template.replace(placeholderRegex, (match, placeholder) => {
+                if (['participants', 'FIO', 'fio_group'].includes(placeholder)) return names.filter(Boolean).join(', ');
                 const field = fields.find(f => f.code == placeholder);
                 const data = applicationData.find(item => item.fieldId === field?.fieldId);
                 return data ? data.value : match;

@@ -31,4 +31,16 @@ export class Nomination {
 
     @Column({ default: 0 })
     order: number = 0;
+
+    @Column({ default: 'standalone' })
+    applicationMode: 'standalone' | 'supplementary';
+
+    @Column('uuid', { array: true, default: '{}' })
+    allowedSourceNominationIds: string[];
+
+    @Column({ default: 0 })
+    minParticipants: number;
+
+    @Column({ type: 'integer', nullable: true })
+    maxParticipants: number | null;
 }

@@ -20,6 +20,8 @@ export class NominationRepository {
             .leftJoinAndSelect('nomination.nominationType', 'nominationType')
             .leftJoinAndSelect('nomination.subNominations', 'subNominations')
             .leftJoinAndSelect('subNominations.applications', 'applications')
+            .leftJoinAndSelect('applications.participants', 'participants')
+            .leftJoinAndSelect('applications.sourceParticipant', 'sourceParticipant')
             .orderBy('subNominations.order', 'ASC')
             .addOrderBy('nomination.order', 'ASC')
             .getMany();

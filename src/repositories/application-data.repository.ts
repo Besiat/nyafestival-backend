@@ -52,6 +52,7 @@ export class ApplicationDataRepository {
         )
         .innerJoin('field', 'field', 'field.fieldId = applicationData.fieldId')
         .where('application.state = :state', { state: 4 })
+        .andWhere('application."sourceParticipantId" IS NULL AND application."withdrawnAt" IS NULL')
         .andWhere('field.code IN (:...codes)', { codes: fieldCodes }) // multiple field codes
         .andWhere('applicationData.value != :empty', { empty: '' }) // exclude empty values
         .getRawMany();

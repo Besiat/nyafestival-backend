@@ -1,5 +1,5 @@
 // nomination.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, BadRequestException, Request, Query } from '@nestjs/common';
 import { NominationService } from '../services/nomination.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { Nomination } from '../entity/festival/nomination.entity';
@@ -9,11 +9,14 @@ import { JwtAuthGuard } from '../guards/jwt-guard';
 import { NominationPublicDTO } from '../dto/nomination-public.dto';
 import { randomUUID } from 'crypto';
 import { getPublicStateFromVisibility } from '../utils/application-public-state';
+import { ApplicationReviewGuard } from '../guards/application-review-guard';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request';
+import { getApplicationAccess } from '../utils/application-access';
 
 @Controller('api/nominations')
 @ApiTags('Nominations') // Optional: Group your API under a tag
 export class NominationController {
-    constructor(private readonly nominationService: NominationService) { }
+    constructor(private readonly nominationService: NominationService) {}
 
     @Get()
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations' })
@@ -23,38 +26,51 @@ export class NominationController {
     }
 
     @Get('applications')
-    @UseGuards(JwtAuthGuard, AdminGuard)
+    @UseGuards(JwtAuthGuard, ApplicationReviewGuard)
     @ApiOperation({ operationId: 'findAll', summary: 'Get all nominations with applications' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with applications', type: Nomination, isArray: true })
     @ApiBearerAuth()
-    async findAllWithNominations(): Promise<Nomination[]> {
-        return (await this.nominationService.getAllNominationsWithApplications());
+    async findAllWithNominations(@Request() req: AuthenticatedRequest, @Query('scope') scope?: string): Promise<Nomination[]> {
+        return this.nominationService.getAllNominationsWithApplications(getApplicationAccess(req.user, scope));
+    }
+
+    @Get('review')
+    @UseGuards(JwtAuthGuard, ApplicationReviewGuard)
+    @ApiBearerAuth()
+    async findReviewNominations(@Request() req: AuthenticatedRequest, @Query('scope') scope?: string): Promise<Nomination[]> {
+        return this.nominationService.getReviewNominations(req.user, scope);
     }
 
     @Get('applicationsPublic')
     @ApiOperation({ operationId: 'findAllPublic', summary: 'Get all applications public' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with public applications', type: NominationPublicDTO, isArray: true })
     async findAllApplicationsPublic(): Promise<NominationPublicDTO[]> {
-        const nominations = (await this.nominationService.getAllNominationsWithApplications());
-        const result = nominations.filter(nomination => nomination.applicationMode !== 'supplementary').map(nomination => ({
-            id: nomination.nominationId,
-            name: nomination.name,
-            nominationType: nomination.nominationType ? {
-                code: nomination.nominationType.code,
-                name: nomination.nominationType.name,
-                applicationsEndDate: nomination.nominationType.applicationsEndDate,
-                showAccepted: nomination.nominationType.showAccepted,
-            } : null,
-            subNominations: nomination.subNominations.map(subNomination => ({
-                id: subNomination.subNominationId,
-                name: subNomination.name,
-                applications: subNomination.applications.filter(application => !application.sourceParticipantId && !application.withdrawnAt).map(application => ({
-                    id: randomUUID(),
-                    fullName: application.fullName,
-                    status: getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
+        const nominations = await this.nominationService.getAllNominationsWithApplications();
+        const result = nominations
+            .filter(nomination => nomination.applicationMode !== 'supplementary')
+            .map(nomination => ({
+                id: nomination.nominationId,
+                name: nomination.name,
+                nominationType: nomination.nominationType
+                    ? {
+                          code: nomination.nominationType.code,
+                          name: nomination.nominationType.name,
+                          applicationsEndDate: nomination.nominationType.applicationsEndDate,
+                          showAccepted: nomination.nominationType.showAccepted,
+                      }
+                    : null,
+                subNominations: nomination.subNominations.map(subNomination => ({
+                    id: subNomination.subNominationId,
+                    name: subNomination.name,
+                    applications: subNomination.applications
+                        .filter(application => !application.sourceParticipantId && !application.withdrawnAt)
+                        .map(application => ({
+                            id: randomUUID(),
+                            fullName: application.fullName,
+                            status: getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
+                        })),
                 })),
-            })),
-        }));
+            }));
 
         return result;
     }
@@ -117,7 +133,7 @@ export class NominationController {
     async addFieldToNomination(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,
-        @Param('order') order: number = 0
+        @Param('order') order: number = 0,
     ): Promise<Nomination | undefined> {
         try {
             await this.nominationService.addFieldToNomination(nominationId, fieldId, order);
@@ -159,7 +175,7 @@ export class NominationController {
     async updateFieldOrder(
         @Param('nominationId') nominationId: string,
         @Param('fieldId') fieldId: string,
-        @Param('order') order: number
+        @Param('order') order: number,
     ): Promise<Nomination | undefined> {
         try {
             await this.nominationService.updateFieldOrder(nominationId, fieldId, order);

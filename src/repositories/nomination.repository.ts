@@ -1,21 +1,28 @@
 // nomination.repository.ts
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Nomination } from '../entity/festival/nomination.entity';
+import { ApplicationAccess, FOYER_TYPE_CODES } from '../utils/application-access';
 
 @Injectable()
 export class NominationRepository {
-    constructor(
-        @InjectRepository(Nomination) private readonly nominationRepository: Repository<Nomination>,
-    ) { }
+    constructor(@InjectRepository(Nomination) private readonly nominationRepository: Repository<Nomination>) {}
 
     async getAll(): Promise<Nomination[]> {
         return await this.nominationRepository.find();
     }
 
-    async getAllWithApplications(): Promise<Nomination[]> {
-        const nominations = await this.nominationRepository
+    async getForReview(access: ApplicationAccess): Promise<Nomination[]> {
+        return this.nominationRepository.find({
+            where: access.foyer ? { nominationType: { code: In([...FOYER_TYPE_CODES]) } } : {},
+            relations: ['nominationType', 'subNominations', 'nominationFields', 'nominationFields.field'],
+            order: { order: 'ASC', subNominations: { order: 'ASC' } },
+        });
+    }
+
+    async getAllWithApplications(access?: ApplicationAccess): Promise<Nomination[]> {
+        const query = this.nominationRepository
             .createQueryBuilder('nomination')
             .leftJoinAndSelect('nomination.nominationType', 'nominationType')
             .leftJoinAndSelect('nomination.subNominations', 'subNominations')
@@ -23,10 +30,9 @@ export class NominationRepository {
             .leftJoinAndSelect('applications.participants', 'participants')
             .leftJoinAndSelect('applications.sourceParticipant', 'sourceParticipant')
             .orderBy('subNominations.order', 'ASC')
-            .addOrderBy('nomination.order', 'ASC')
-            .getMany();
-
-        return nominations;
+            .addOrderBy('nomination.order', 'ASC');
+        if (access?.foyer) query.andWhere('nominationType.code IN (:...foyerCodes)', { foyerCodes: [...FOYER_TYPE_CODES] });
+        return query.getMany();
     }
 
     async get(id: string): Promise<Nomination | undefined> {
@@ -34,7 +40,7 @@ export class NominationRepository {
             where: {
                 nominationId: id,
             },
-            relations: ['nominationFields', 'nominationFields.field', 'subNominations']
+            relations: ['nominationFields', 'nominationFields.field', 'subNominations'],
         });
     }
 

@@ -42,10 +42,11 @@ export class AuthService {
         // Create the user in the database
         await this.userService.create({
             userId: randomUUID(),
-            username: '',
             isAdmin: false,
+            isFoyerCoordinator: false,
             applications: [],
-            ...registerDto,
+            username: registerDto.username,
+            email: registerDto.email,
             vkId: null,
             accessToken: null,
             password: hashedPassword,
@@ -57,7 +58,12 @@ export class AuthService {
     }
 
     async login(user: User) {
-        const payload = { userId: user.userId, username: user.username, isAdmin: user.isAdmin }; // You can include additional user data in the payload
+        const payload = {
+            userId: user.userId,
+            username: user.username,
+            isAdmin: user.isAdmin === true,
+            isFoyerCoordinator: user.isFoyerCoordinator === true,
+        };
         return {
             accessToken: this.jwtService.sign(payload),
         };

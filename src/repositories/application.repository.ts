@@ -1,14 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Application } from '../entity/festival/application.entity';
+import { ApplicationAccess, FOYER_TYPE_CODES } from '../utils/application-access';
 
 @Injectable()
 export class ApplicationRepository {
     constructor(@InjectRepository(Application) private readonly applicationRepository: Repository<Application>) {}
 
-    async getAll(): Promise<Application[]> {
-        return await this.applicationRepository.find({ relations: ['applicationData', 'applicationData.field', 'participants', 'sourceParticipant', 'subNomination', 'subNomination.nomination'] });
+    async getAll(access?: ApplicationAccess): Promise<Application[]> {
+        return this.applicationRepository.find({
+            where: access?.foyer ? { subNomination: { nomination: { nominationType: { code: In([...FOYER_TYPE_CODES]) } } } } : {},
+            relations: [
+                'applicationData',
+                'applicationData.field',
+                'participants',
+                'sourceParticipant',
+                'subNomination',
+                'subNomination.nomination',
+                'subNomination.nomination.nominationType',
+            ],
+        });
     }
 
     async get(id: string): Promise<Application | null> {
@@ -16,14 +28,29 @@ export class ApplicationRepository {
             where: {
                 applicationId: id,
             },
-            relations: ['subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType', 'applicationData', 'participants', 'sourceParticipant'],
+            relations: [
+                'subNomination',
+                'subNomination.nomination',
+                'subNomination.nomination.nominationType',
+                'applicationData',
+                'participants',
+                'sourceParticipant',
+            ],
         });
     }
 
     async getByUserId(userId: string): Promise<Application[]> {
         return await this.applicationRepository.find({
             where: { userId },
-            relations: ['applicationData', 'applicationData.field', 'subNomination', 'subNomination.nomination', 'subNomination.nomination.nominationType', 'participants', 'sourceParticipant'],
+            relations: [
+                'applicationData',
+                'applicationData.field',
+                'subNomination',
+                'subNomination.nomination',
+                'subNomination.nomination.nominationType',
+                'participants',
+                'sourceParticipant',
+            ],
         });
     }
 

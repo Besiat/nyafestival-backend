@@ -28,6 +28,9 @@ export class User {
     @Column('bool')
     isAdmin: boolean = false;
 
+    @Column('bool', { default: false })
+    isFoyerCoordinator: boolean = false;
+
     @OneToMany(() => Application, (application) => application.user)
     applications: Application[];
 

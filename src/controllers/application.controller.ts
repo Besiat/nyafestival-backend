@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, Param, Get, Put, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Param, Get, Put, Query, ValidationPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterApplicationDTO } from '../dto/register-application.dto';
 import { ApplicationService, ApplicationWithScheduleAssignments } from '../services/application.service';
@@ -11,11 +11,17 @@ import { ApplicationData } from '../entity/festival/application-data.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SetApplicationStateDTO } from '../dto/set-application-state.dto';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request';
+import { ApplicationReviewGuard } from '../guards/application-review-guard';
+import { ApplicationRepository } from '../repositories/application.repository';
+import { getApplicationAccess } from '../utils/application-access';
 
 @Controller('api/applications')
 @ApiTags('Applications')
 export class ApplicationController {
-    constructor(private readonly applicationService: ApplicationService) {}
+    constructor(
+        private readonly applicationService: ApplicationService,
+        private readonly applicationRepository: ApplicationRepository,
+    ) {}
 
     @Post()
     @Throttle({ default: { limit: 1, ttl: 5000 } })
@@ -46,15 +52,14 @@ export class ApplicationController {
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @ApiBody({ type: UpdateApplicationByAdminDTO, description: 'Application data to update as admin' })
     @ApiResponse({ status: 200, description: 'Application updated successfully' })
-    @UseGuards(JwtAuthGuard, AdminGuard)
+    @UseGuards(JwtAuthGuard, ApplicationReviewGuard)
     @ApiBearerAuth()
     async updateApplicationByAdmin(
         @Param('applicationId') applicationId: string,
         @Body() application: UpdateApplicationByAdminDTO,
         @Request() req: AuthenticatedRequest,
     ): Promise<void> {
-        const userId = req.user.userId;
-        await this.applicationService.updateApplicationByAdmin(userId, applicationId, application);
+        await this.applicationService.updateApplicationByAdmin(req.user.userId, applicationId, application);
     }
 
     @Post(':applicationId/state')
@@ -62,7 +67,7 @@ export class ApplicationController {
     @ApiResponse({ status: 200, description: 'Application state updated successfully' })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
     @ApiBody({ type: SetApplicationStateDTO })
-    @UseGuards(JwtAuthGuard, AdminGuard)
+    @UseGuards(JwtAuthGuard, ApplicationReviewGuard)
     @ApiBearerAuth()
     async setApplicationState(
         @Param('applicationId') applicationId: string,
@@ -82,19 +87,21 @@ export class ApplicationController {
     @Get()
     @ApiOperation({ operationId: 'getAllApplications', summary: 'Returns all applications' })
     @ApiResponse({ status: 200, description: 'Applications', type: Application, isArray: true })
-    @UseGuards(JwtAuthGuard, AdminGuard)
+    @UseGuards(JwtAuthGuard, ApplicationReviewGuard)
     @ApiBearerAuth()
-    async getAllApplications(): Promise<Application[]> {
-        return await this.applicationService.getApplications();
+    async getAllApplications(@Request() req: AuthenticatedRequest, @Query('scope') scope?: string): Promise<Application[]> {
+        return this.applicationRepository.getAll(getApplicationAccess(req.user, scope));
     }
 
     @Get(':applicationId/applicationData')
     @ApiOperation({ operationId: 'getApplicationData', summary: 'Returns all data of the application' })
     @ApiResponse({ status: 200, description: 'Data of the application', type: ApplicationData, isArray: true })
     @ApiParam({ name: 'applicationId', description: 'Application ID' })
-    @UseGuards(JwtAuthGuard, AdminGuard)
+    @UseGuards(JwtAuthGuard, ApplicationReviewGuard)
     @ApiBearerAuth()
-    async getApplciationData(@Param('applicationId') applicationId: string): Promise<ApplicationData[]> {
+    async getApplciationData(
+        @Param('applicationId') applicationId: string,
+    ): Promise<ApplicationData[]> {
         return await this.applicationService.getApplicationData(applicationId);
     }
 

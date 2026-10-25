@@ -14,6 +14,10 @@ export class PageService {
         return await this.pageRepository.getCosplayPages();
     }
 
+    async getOnlineContestPages() {
+        return await this.pageRepository.getOnlineContestPages();
+    }
+
     async getPageById(id: string) {
         return await this.pageRepository.get(id);
     }

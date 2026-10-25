@@ -14,6 +14,14 @@ export class PageRepository {
     }
 
     async getCosplayPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title' | 'order'>[]> {
+        return this.getChildren('^contest/cosplay/[^/]+$');
+    }
+
+    async getOnlineContestPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title' | 'order'>[]> {
+        return this.getChildren('^online-contest/[^/]+$');
+    }
+
+    private async getChildren(routePattern: string): Promise<Pick<Page, 'pageId' | 'route' | 'title' | 'order'>[]> {
         return await this.pageRepository.find({
             select: {
                 pageId: true,
@@ -22,8 +30,8 @@ export class PageRepository {
                 order: true,
             },
             where: {
-                route: Raw((column) => `${column} ~ :cosplayRoutePattern`, {
-                    cosplayRoutePattern: '^contest/cosplay/[^/]+$',
+                route: Raw((column) => `${column} ~ :routePattern`, {
+                    routePattern,
                 }),
             },
             order: {

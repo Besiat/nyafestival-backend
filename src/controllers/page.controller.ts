@@ -25,6 +25,13 @@ export class PagesController {
       return this.pagesService.getCosplayPages();
   }
 
+  @Get('online-contest/children')
+  @ApiOperation({ operationId: 'findOnlineContestPages', summary: 'Get direct children of the online contest page' })
+  @ApiResponse({ status: 200, description: 'Returns online contest pages ordered by order and route', isArray: true })
+  async findOnlineContestPages(): Promise<Pick<Page, 'pageId' | 'route' | 'title' | 'order'>[]> {
+      return this.pagesService.getOnlineContestPages();
+  }
+
   @Get(':route')
   @ApiOperation({ operationId: 'findOne', summary: 'Get a page by route' })
   @ApiParam({ name: 'route', type: String, description: 'Page Route' })

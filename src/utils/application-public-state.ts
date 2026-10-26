@@ -18,10 +18,6 @@ export const getPublicApplicationState = (application: Application): Application
 
 export const withPublicApplicationState = (application: Application, showAccepted?: boolean): Application => {
     const state = showAccepted === undefined ? getPublicApplicationState(application) : getPublicStateFromVisibility(application.state, showAccepted);
-
-    if (state === application.state) {
-        return { ...application, adminNote: state === ApplicationState.Invalid ? application.adminNote : null };
-    }
-
-    return { ...application, state, adminNote: state === ApplicationState.Invalid ? application.adminNote : null };
+    const showNote = state === ApplicationState.Invalid;
+    return { ...application, state, adminNote: showNote ? application.adminNote : null };
 };

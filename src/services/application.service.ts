@@ -282,7 +282,9 @@ export class ApplicationService {
         const application = await this.getApplicationOrThrow(applicationId);
 
         application.state = newState;
-        application.adminNote = note && newState === ApplicationState.Invalid ? note : null;
+        if (newState === ApplicationState.Invalid && note !== undefined) {
+            application.adminNote = note;
+        }
         await this.applicationRepository.update(application);
     }
 

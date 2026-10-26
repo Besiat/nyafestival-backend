@@ -105,7 +105,6 @@ export class LinkedApplicationService {
                 });
             if (mainChanged && !admin) {
                 application.state = ApplicationState.New;
-                application.adminNote = null;
             }
             application.subNominationId = subNomination.subNominationId;
             if (admin && request.fullName !== undefined) application.fullName = request.fullName;
@@ -176,7 +175,6 @@ export class LinkedApplicationService {
                         });
                     if (changed) {
                         target.state = ApplicationState.New;
-                        target.adminNote = null;
                     }
                     target.withdrawnAt = null;
                     target.fullName = this.fullName(childSub, childData, [getParticipantName(participant)]);
@@ -190,7 +188,6 @@ export class LinkedApplicationService {
                     const childSub = await this.getSubNomination(manager, child.subNominationId);
                     if (identityChanged || candidateMaterialChanged) {
                         child.state = ApplicationState.New;
-                        child.adminNote = null;
                         child.fullName = this.fullName(
                             childSub,
                             await manager.findBy(ApplicationData, { applicationId: child.applicationId }),

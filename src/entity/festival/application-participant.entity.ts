@@ -22,6 +22,9 @@ export class ApplicationParticipant {
     @Column({ type: 'varchar', nullable: true })
     middleName: string | null;
 
+    @Column({ type: 'varchar', nullable: true })
+    legacyFio: string | null;
+
     @Column({ default: 0 })
     order: number;
 

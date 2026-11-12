@@ -12,3 +12,4 @@ local-backups/
 local.env
 production.env
 ecosystem.config.js
+.deploy/

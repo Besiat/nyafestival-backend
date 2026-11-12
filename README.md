@@ -4,6 +4,8 @@ Backend API for the Nyaf Festival platform built with NestJS and TypeScript. Han
 
 **Live Deployments**: [coverfestufa.ru](https://coverfestufa.ru) | [nyafest.ru](https://nyafest.ru)
 
+**Deploying and logs**: `yarn deploy`, `yarn deploy:rollback`, `yarn logs` - see [DEPLOY.md](DEPLOY.md).
+
 ## Application System Architecture
 
 The core functionality revolves around a flexible application management system with a three-tier structure:

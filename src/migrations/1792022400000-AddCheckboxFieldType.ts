@@ -4,7 +4,7 @@ export class AddCheckboxFieldType1792022400000 implements MigrationInterface {
     name = 'AddCheckboxFieldType1792022400000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TYPE "public"."field_type_enum" ADD VALUE 'checkbox'`);
+        await queryRunner.query(`ALTER TYPE "public"."field_type_enum" ADD VALUE IF NOT EXISTS 'checkbox'`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {

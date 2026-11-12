@@ -22,7 +22,11 @@
       "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
       "typeorm:generate": "yarn run typeorm migration:generate -d ./src/tools/data-source.ts",
       "typeorm:run": "yarn run typeorm migration:run -d ./src/tools/data-source.ts",
-      "typeorm:revert": "yarn run typeorm migration:revert -d ./src/tools/data-source.ts"
+      "typeorm:revert": "yarn run typeorm migration:revert -d ./src/tools/data-source.ts",
+      "deploy": "node scripts/deploy/deploy.mjs",
+      "deploy:rollback": "node scripts/deploy/deploy.mjs rollback",
+      "deploy:status": "node scripts/deploy/deploy.mjs status",
+      "logs": "node scripts/deploy/logs.mjs --default=api"
    },
    "dependencies": {
       "@nestjs-modules/mailer": "2.3.4",

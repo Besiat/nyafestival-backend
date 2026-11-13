@@ -20,8 +20,8 @@ set -Eeuo pipefail
 
 APP_DIR=/root/nyafestival-backend
 RELEASES_DIR=/root/backend-deployments
-APPS=(nyafest-api coverfest-api)
-PORTS=(3000 3001)
+APPS=(nyafest-api) # PM2 apps that run from APP_DIR (coverfest-api is decommissioned)
+PORTS=(3000)        # port of each app above, for the health check
 DB_NAME=nyafestival
 KEEP_RELEASES=5
 SWAP_ITEMS=(build node_modules package.json yarn.lock release.json)
@@ -164,7 +164,7 @@ cmd_deploy() {
       log "Backing up database $DB_NAME to $rel/db-before.dump"
       (cd /tmp && sudo -u postgres pg_dump -Fc "$DB_NAME") >"$rel/db-before.dump"
       echo "  $(du -h "$rel/db-before.dump" | cut -f1)"
-      log "Running migrations (all schemas in one transaction)"
+      log "Running migrations (in one transaction)"
       node "$rel/bundle/deploy/migrate.js" run "${APPS[@]}" ||
         die "Migrations failed. The live code was not changed."
       ;;

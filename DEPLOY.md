@@ -2,12 +2,12 @@
 
 Both repos deploy to the production VPS over SSH with plain `yarn` commands.
 
-|              | Backend (this repo)          | Frontend (`../nyafestival`) |
-| ------------ | ---------------------------- | --------------------------- |
-| Deploy       | `yarn deploy`                | `yarn deploy`               |
-| Roll back    | `yarn deploy:rollback`       | `yarn deploy:rollback`      |
-| What is live | `yarn deploy:status`         | `yarn deploy:status`        |
-| Logs         | `yarn logs` (PM2, both APIs) | `yarn logs` (nginx errors)  |
+|              | Backend (this repo)           | Frontend (`../nyafestival`) |
+| ------------ | ----------------------------- | --------------------------- |
+| Deploy       | `yarn deploy`                 | `yarn deploy`               |
+| Roll back    | `yarn deploy:rollback`        | `yarn deploy:rollback`      |
+| What is live | `yarn deploy:status`          | `yarn deploy:status`        |
+| Logs         | `yarn logs` (PM2 nyafest-api) | `yarn logs` (nginx errors)  |
 
 ## One-time setup (per computer)
 
@@ -19,14 +19,14 @@ The server IP is `VPS_IP` in the backend `.env`.
    Windows (PowerShell):
 
    ```powershell
-   ssh-keygen -t ed25519 -f "$HOME\.ssh\nyafest_ed25519" -C "nyafest deploy"
-   Get-Content "$HOME\.ssh\nyafest_ed25519.pub" | ssh root@<server-ip> "umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys"
+   ssh-keygen -t ed25519 -f "$HOME\.ssh\nyafest_ed25519" -C "nyafest deploy $env:COMPUTERNAME"
+   Get-Content "$HOME\.ssh\nyafest_ed25519.pub" | ssh root@<server-ip> "umask 077; mkdir -p ~/.ssh; tr -d '\r' >> ~/.ssh/authorized_keys"
    ```
 
    macOS / Linux:
 
    ```sh
-   ssh-keygen -t ed25519 -f ~/.ssh/nyafest_ed25519 -C "nyafest deploy"
+   ssh-keygen -t ed25519 -f ~/.ssh/nyafest_ed25519 -C "nyafest deploy $(hostname)"
    ssh-copy-id -i ~/.ssh/nyafest_ed25519 root@<server-ip>
    ```
 
@@ -40,6 +40,25 @@ The server IP is `VPS_IP` in the backend `.env`.
    ```
 
 3. Check that `ssh nyafest uptime` works without asking for a password.
+   The first time, ssh asks whether to trust the server. Answer `yes` if the fingerprint it shows is
+   `SHA256:EZHHw6z7PpGS32kOA5byalvG9ViMDmoOw6ZGeNQbnF4`.
+
+### Adding a computer without the root password
+
+Someone who already has access can add the new computer's key, so the root password isn't needed:
+
+1. On the new computer, run only the `ssh-keygen` line from step 1 and send the `nyafest_ed25519.pub` file to that person.
+   It's a public key, safe to send by chat or email. Never send the file without `.pub`.
+2. They run this in the folder where they saved the file:
+
+   ```powershell
+   Get-Content .\nyafest_ed25519.pub | ssh nyafest "tr -d '\r' >> ~/.ssh/authorized_keys"
+   ```
+
+3. Continue with steps 2 and 3 on the new computer.
+
+To take a computer's access away, delete its line from `/root/.ssh/authorized_keys` on the server.
+Each line ends with the computer name given to `ssh-keygen -C`; `ssh nyafest cat .ssh/authorized_keys` lists them.
 
 Needs Node 20+, git, and the `ssh` and `tar` that come with Windows 10+, macOS and Linux.
 
@@ -55,23 +74,11 @@ What happens:
 1. **Checks.** Refuses to deploy uncommitted changes (`--allow-dirty` overrides), warns when the commit is not pushed or you are not on `master`.
 2. **Build.** Runs `yarn build` locally and uploads `build/`, `package.json` and `yarn.lock`.
 3. **Install.** On the server, production dependencies are installed into a new release directory while the current version keeps running.
-4. **Migrations.** If there are pending migrations, the database is backed up with `pg_dump` first. Then the migrations run for **both** sites (`public` schema for nyafest, `coverfest` schema for coverfest) in **one transaction**: either both schemas are migrated or nothing changes. If a migration fails, the deploy stops and the live code is untouched.
-5. **Switch.** The new code is moved into place, `nyafest-api` and `coverfest-api` are restarted, and the script waits for both to answer on `/api-json`. If they don't come up within 60 seconds, the previous code is switched back automatically.
+4. **Migrations.** If there are pending migrations, the database is backed up with `pg_dump` first. Then all pending migrations run in **one transaction**: if one fails, nothing is changed, the deploy stops and the live code is untouched.
+5. **Switch.** The new code is moved into place, `nyafest-api` is restarted, and the script waits for it to answer on `/api-json`. If it doesn't come up within 60 seconds, the previous code is switched back automatically.
 6. **Cleanup.** The last 5 releases are kept for rollbacks.
 
-The APIs keep running during steps 1-4 and are down only for the restart in step 5.
-
-### Migrations must not hard-code the schema
-
-Every migration runs once per site, with `search_path` set to that site's schema. Use **unqualified** names in migration SQL:
-
-```ts
-await queryRunner.query(`ALTER TABLE "user" ADD "isFoyerCoordinator" boolean NOT NULL DEFAULT false`); // good
-await queryRunner.query(`ALTER TABLE "public"."user" ...`); // bad: the coverfest schema is never changed
-```
-
-`typeorm migration:generate` writes enum types as `"public"."<name>_enum"`, so remove the `"public".` prefix from generated migrations.
-`yarn deploy` prints a warning for pending migrations that still contain `"public".`.
+The API keeps running during steps 1-4 and is down only for the restart in step 5.
 
 ### Rolling back
 
@@ -84,8 +91,7 @@ Puts back the code that was live before the current release (run it again to go 
 ## Logs
 
 ```sh
-yarn logs                         # both APIs: last 100 lines, then follow (Ctrl+C to stop)
-yarn logs nyafest                 # only nyafest-api (also: coverfest)
+yarn logs                         # nyafest-api: last 100 lines, then follow (Ctrl+C to stop)
 yarn logs nginx                   # nginx error log (also: access)
 yarn logs -n 500 --err            # more history, error stream only
 yarn logs --no-follow -n 2000 > api.log   # save to a file

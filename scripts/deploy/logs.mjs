@@ -4,18 +4,14 @@
 //   yarn logs [target] [--lines N] [--err] [--no-follow]
 //
 // Targets:
-//   api        both backend APIs (PM2: nyafest-api + coverfest-api)
-//   nyafest    nyafest-api only
-//   coverfest  coverfest-api only
-//   nginx      nginx error log
-//   access     nginx access log
+//   api     backend API (PM2: nyafest-api)
+//   nginx   nginx error log
+//   access  nginx access log
 import { parseArgs } from 'node:util';
 import { ensureSshHost, fail, runRemoteCommand } from './lib.mjs';
 
 const PM2_TARGETS = {
-   api: "'/^(nyafest|coverfest)-api$/'",
-   nyafest: 'nyafest-api',
-   coverfest: 'coverfest-api',
+   api: 'nyafest-api',
 };
 
 const FILE_TARGETS = {
@@ -26,13 +22,11 @@ const FILE_TARGETS = {
 // pm2 is installed through nvm, which non-interactive ssh sessions don't load.
 const LOAD_NVM = 'export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1;';
 
-const USAGE = `Usage: yarn logs [api|nyafest|coverfest|nginx|access] [--lines N] [--err] [--no-follow]
+const USAGE = `Usage: yarn logs [api|nginx|access] [--lines N] [--err] [--no-follow]
 
-  api        both backend APIs (PM2)
-  nyafest    nyafest-api only
-  coverfest  coverfest-api only
-  nginx      nginx error log
-  access     nginx access log
+  api     backend API (PM2 nyafest-api)
+  nginx   nginx error log
+  access  nginx access log
 
   -n, --lines N   how many lines of history to show (default 100)
   --err           only the error stream (PM2 targets)

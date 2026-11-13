@@ -5,9 +5,9 @@
 //   node deploy/migrate.js run <pm2-app>...     apply pending migrations
 //
 // Database settings (DB_*, DB_SCHEMA) come from each PM2 app's own environment (`pm2 jlist`),
-// so nothing secret lives here. Every app has its own schema (nyafest-api -> public,
-// coverfest-api -> coverfest) and all schemas are migrated in ONE transaction:
-// either every site gets the new schema or none does.
+// so nothing secret lives here. Today that is just nyafest-api (schema public). If several apps
+// with their own schemas are given, all schemas are migrated in ONE transaction:
+// either every app gets the new schema or none does.
 'use strict';
 
 const { execFileSync } = require('child_process');

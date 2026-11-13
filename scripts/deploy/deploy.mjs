@@ -1,4 +1,4 @@
-// Deploy the backend (nyafest-api + coverfest-api) to the production server. See DEPLOY.md.
+// Deploy the backend (nyafest-api) to the production server. See DEPLOY.md.
 //
 //   yarn deploy [--yes] [--allow-dirty] [--dry-run]   build, upload, migrate, switch, restart
 //   yarn deploy:rollback [--yes]                      switch back to the previous release
@@ -44,7 +44,7 @@ const deploy = async () => {
    const info = gitInfo();
 
    await confirmDeploy({
-      what: 'backend (nyafest-api + coverfest-api)',
+      what: 'backend (nyafest-api)',
       host,
       info,
       allowDirty: options['allow-dirty'],

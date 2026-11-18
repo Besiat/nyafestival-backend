@@ -2,6 +2,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, BadRequestException, Request, Query } from '@nestjs/common';
 import { NominationService } from '../services/nomination.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApplicationState } from '../entity/festival/application.entity';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
@@ -44,10 +45,13 @@ export class NominationController {
     @Get('applicationsPublic')
     @ApiOperation({ operationId: 'findAllPublic', summary: 'Get all applications public' })
     @ApiResponse({ status: 200, description: 'Returns all nominations with public applications', type: NominationPublicDTO, isArray: true })
-    async findAllApplicationsPublic(): Promise<NominationPublicDTO[]> {
+    async findAllApplicationsPublic(@Query('type') type?: string): Promise<NominationPublicDTO[]> {
+        const isHinodeList = type === 'hinode';
         const nominations = await this.nominationService.getAllNominationsWithApplications();
         const result = nominations
-            .filter(nomination => nomination.applicationMode !== 'supplementary')
+            .filter(nomination =>
+                isHinodeList ? nomination.nominationType?.code === 'hinode' : nomination.applicationMode !== 'supplementary',
+            )
             .map(nomination => ({
                 id: nomination.nominationId,
                 name: nomination.name,
@@ -56,18 +60,20 @@ export class NominationController {
                           code: nomination.nominationType.code,
                           name: nomination.nominationType.name,
                           applicationsEndDate: nomination.nominationType.applicationsEndDate,
-                          showAccepted: nomination.nominationType.showAccepted,
+                          showAccepted: !isHinodeList && nomination.nominationType.showAccepted,
                       }
                     : null,
                 subNominations: nomination.subNominations.map(subNomination => ({
                     id: subNomination.subNominationId,
                     name: subNomination.name,
                     applications: subNomination.applications
-                        .filter(application => !application.sourceParticipantId && !application.withdrawnAt)
+                        .filter(application => !application.withdrawnAt && (isHinodeList || !application.sourceParticipantId))
                         .map(application => ({
                             id: randomUUID(),
                             fullName: application.fullName,
-                            status: getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
+                            status: isHinodeList
+                                ? ApplicationState.Pending
+                                : getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
                         })),
                 })),
             }));

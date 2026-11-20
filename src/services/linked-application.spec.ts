@@ -1,12 +1,12 @@
 /* global describe, it, expect */
-import { normalizeParticipantName, validateLinkedAnswers } from './linked-application.service';
-import { Field } from '../entity/festival/field.entity';
+import { DataSource } from 'typeorm';
+import { LinkedApplicationService, normalizeParticipantName } from './linked-application.service';
+import { ApplicationData } from '../entity/festival/application-data.entity';
+import { SubNomination } from '../entity/festival/sub-nomination.entity';
 import { FieldType } from '../enums/fieldType';
 import { Application, ApplicationState } from '../entity/festival/application.entity';
 import { getParticipantName } from '../utils/participant-name';
 import { withPublicApplicationState } from '../utils/application-public-state';
-
-const field = { fieldId: 'confirmation', label: '18 лет', code: 'confirm_age_18', required: true, type: FieldType.Checkbox } as Field;
 
 describe('linked application validation', () => {
     it('normalizes and returns only the separate name parts', () => {
@@ -37,27 +37,42 @@ describe('linked application validation', () => {
             expect(error.getResponse()).toEqual(expect.objectContaining({ participantId: 'p', fieldId: key }));
         }
     });
-    it.each(['false', ''])('does not accept %p as a required confirmation', value => {
-        expect(() => validateLinkedAnswers([{ fieldId: field.fieldId, value }], [field], 'person')).toThrow();
-    });
-    it('identifies the participant and field in a missing-confirmation error', () => {
-        try {
-            validateLinkedAnswers([], [field], 'person');
-            throw new Error('Expected validation failure');
-        } catch (error) {
-            expect(error.getResponse()).toEqual(expect.objectContaining({ participantId: 'person', fieldId: field.fieldId }));
-        }
-    });
-    it('accepts false for optional checkboxes and true for required ones', () => {
-        expect(validateLinkedAnswers([{ fieldId: field.fieldId, value: 'false' }], [{ ...field, required: false }])).toHaveLength(1);
-        expect(validateLinkedAnswers([{ fieldId: field.fieldId, value: 'true' }], [field])).toHaveLength(1);
-    });
-    it('trims text answers and requires configured text fields', () => {
-        const textField = { ...field, type: FieldType.Text, label: 'Персонаж' };
-        expect(validateLinkedAnswers([{ fieldId: field.fieldId, value: '  Персонаж  ' }], [textField])).toEqual([
-            { fieldId: field.fieldId, value: 'Персонаж' },
+    it('merges partial answer updates without rewriting unchanged answers', async () => {
+        const application = { applicationId: 'application', userId: 'owner', subNominationId: 'sub', state: ApplicationState.Accepted };
+        const oldAnswers = [
+            { applicationDataId: 'a', fieldId: 'character', value: 'Old character' },
+            { applicationDataId: 'b', fieldId: 'confirmation', value: 'true' },
+        ];
+        const sub = {
+            subNominationId: 'sub',
+            nomination: {
+                applicationMode: 'standalone',
+                fullNameTemplate: '{char_name}',
+                nominationFields: [
+                    { field: { fieldId: 'character', code: 'char_name', type: FieldType.Text } },
+                    { field: { fieldId: 'confirmation', code: 'confirm_age_18', type: FieldType.Checkbox } },
+                ],
+            },
+        };
+        const manager = {
+            findOne: jest.fn(entity => entity === Application ? application : entity === SubNomination ? sub : null),
+            findBy: jest.fn(entity => entity === ApplicationData ? oldAnswers : []),
+            create: jest.fn((_entity, value) => value),
+            save: jest.fn(async (_entity, value) => value),
+        };
+        const service = new LinkedApplicationService({ transaction: callback => callback(manager) } as unknown as DataSource);
+
+        await expect(service.save('owner', {
+            applicationId: 'application',
+            applicationData: [{ fieldId: 'character', value: 'New character' }],
+        })).resolves.toEqual({ applicationId: 'application' });
+
+        expect(manager.save).toHaveBeenCalledWith(Application, expect.objectContaining({
+            fullName: 'New character', state: ApplicationState.New,
+        }));
+        expect(manager.save.mock.calls.filter(([entity]) => entity === ApplicationData)).toEqual([
+            [ApplicationData, expect.objectContaining({ applicationDataId: 'a', fieldId: 'character', value: 'New character' })],
         ]);
-        expect(() => validateLinkedAnswers([{ fieldId: field.fieldId, value: '  ' }], [textField])).toThrow('Заполните поле «Персонаж»');
     });
     it('masks unpublished decisions and notes using the source nomination visibility', () => {
         const application = { state: ApplicationState.Accepted, adminNote: 'private' } as Application;

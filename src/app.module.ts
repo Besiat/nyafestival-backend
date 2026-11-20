@@ -60,6 +60,9 @@ import { TicketRepository } from './repositories/ticket.repository'
 import { QuestController } from './controllers/quest.controller'
 import { QuestRepository } from './repositories/quest.repository'
 import { QuestService } from './services/quest.service'
+import { QuestRun } from './entity/festival/quest-run.entity'
+import { QuestRunController } from './controllers/quest-run.controller'
+import { QuestRunService } from './services/quest-run.service'
 import { VkAuthService } from './services/vk-auth.service'
 import { Quest2025 } from './constants/quest-2025'
 import { loadEnv } from './config/env'
@@ -111,6 +114,7 @@ loadEnv()
       StageVote,
       Ticket,
       UserQuestProgress,
+      QuestRun,
     ]),
     ThrottlerModule.forRoot([
       {
@@ -133,6 +137,7 @@ loadEnv()
     VotingController,
     TicketsController,
     QuestController,
+    QuestRunController,
   ],
   providers: [
     {
@@ -166,6 +171,7 @@ loadEnv()
     TicketService,
     QuestRepository,
     QuestService,
+    QuestRunService,
     VkAuthService,
     {
       provide: 'IQuest',

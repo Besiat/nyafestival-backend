@@ -2,7 +2,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, BadRequestException, Request, Query } from '@nestjs/common';
 import { NominationService } from '../services/nomination.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { ApplicationState } from '../entity/festival/application.entity';
 import { Nomination } from '../entity/festival/nomination.entity';
 import { AdminGuard } from '../guards/admin-guard';
 import { SubNomination } from '../entity/festival/sub-nomination.entity';
@@ -60,7 +59,7 @@ export class NominationController {
                           code: nomination.nominationType.code,
                           name: nomination.nominationType.name,
                           applicationsEndDate: nomination.nominationType.applicationsEndDate,
-                          showAccepted: !isHinodeList && nomination.nominationType.showAccepted,
+                          showAccepted: nomination.nominationType.showAccepted,
                       }
                     : null,
                 subNominations: nomination.subNominations.map(subNomination => ({
@@ -71,9 +70,7 @@ export class NominationController {
                         .map(application => ({
                             id: randomUUID(),
                             fullName: application.fullName,
-                            status: isHinodeList
-                                ? ApplicationState.Pending
-                                : getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
+                            status: getPublicStateFromVisibility(application.state, nomination.nominationType?.showAccepted),
                         })),
                 })),
             }));

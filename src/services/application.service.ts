@@ -53,8 +53,7 @@ export class ApplicationService {
         const applications = await this.applicationRepository.getByUserId(userId);
         const publicApplications = applications.map(application => {
             const parent = applications.find(item => item.applicationId === application.sourceParticipant?.applicationId);
-            const visibility = (parent ?? application).subNomination?.nomination?.nominationType?.showAccepted;
-            const presented = withPublicApplicationState(application, visibility);
+            const presented = withPublicApplicationState(application);
             const parentState = parent ? withPublicApplicationState(parent).state : undefined;
             return {
                 ...presented,

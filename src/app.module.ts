@@ -72,6 +72,7 @@ import { NominationTypeController } from './controllers/nomination-type.controll
 import { NominationTypeService } from './services/nomination-type.service'
 import { ApplicationParticipant } from './entity/festival/application-participant.entity'
 import { LinkedApplicationService } from './services/linked-application.service'
+import { JuryController } from './controllers/jury.controller'
 
 loadEnv()
 
@@ -124,6 +125,7 @@ loadEnv()
     ]),
   ],
   controllers: [
+    JuryController,
     PagesController,
     NominationController,
     NominationTypeController,

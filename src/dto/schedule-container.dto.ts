@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ScheduleContainerTimeMode } from '../entity/festival/schedule-container.entity';
 import { BlockForScheduleItemForUserDTO } from './block-for-schedule-item-for-user.dto';
 
@@ -8,6 +8,7 @@ export class ScheduleContainerDTO {
     code: string;
     name: string;
     timeMode: ScheduleContainerTimeMode;
+    showOnApplications: boolean;
     defaultStartTime?: string;
     order: number;
     blocks: BlockForScheduleItemForUserDTO[];
@@ -27,6 +28,11 @@ export class UpsertScheduleContainerDTO {
     @ApiProperty({ description: 'Time mode', enum: ['calculated', 'explicit', 'none'] })
     @IsIn(['calculated', 'explicit', 'none'])
     timeMode: ScheduleContainerTimeMode;
+
+    @ApiPropertyOptional({ description: 'Show schedule on application cards' })
+    @IsOptional()
+    @IsBoolean()
+    showOnApplications?: boolean;
 
     @ApiPropertyOptional({ description: 'Default start time for calculated containers', example: '12:00' })
     @IsOptional()

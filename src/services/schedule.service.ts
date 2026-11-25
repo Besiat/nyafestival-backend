@@ -80,6 +80,7 @@ export class ScheduleService {
                 code: container.code,
                 name: container.name,
                 timeMode: container.timeMode,
+                showOnApplications: container.showOnApplications,
                 defaultStartTime: container.defaultStartTime,
                 order: container.order,
                 blocks: await this.mapBlocksToDTOs(container.blocks ?? [], userId),
@@ -115,9 +116,10 @@ export class ScheduleService {
 
         let assignmentOrder = 0;
         for (const container of containers) {
+            if (!container.showOnApplications) continue;
             const blocks = [...(container.blocks ?? [])].sort((a, b) => a.order - b.order);
             const blockStartTimes = this.getBlockStartTimes(container, blocks);
-            const blockNumbers = this.getBlockNumbers(blocks);
+            const blockNumbers = this.getBlockNumbers(container.timeMode === 'calculated' ? blocks : []);
 
             for (const block of blocks) {
                 const scheduleItems = [...(block.scheduleItems ?? [])].sort((a, b) => a.order - b.order);
@@ -163,6 +165,7 @@ export class ScheduleService {
         container.code = data.code;
         container.name = data.name;
         container.timeMode = data.timeMode;
+        container.showOnApplications = data.showOnApplications ?? container.showOnApplications;
         container.defaultStartTime = data.defaultStartTime ?? '';
         container.order = data.order;
         await this.scheduleContainerRepository.save(container);
@@ -170,7 +173,7 @@ export class ScheduleService {
 
     async deleteScheduleContainer(scheduleContainerId: string): Promise<void> {
         const blocks = await this.blockRepository.count({ where: { scheduleContainerId } });
-        if (blocks > 0) throw new Error('Cannot delete schedule container with blocks');
+        if (blocks > 0) throw new BadRequestException('Cannot delete schedule container with blocks');
         await this.scheduleContainerRepository.delete(scheduleContainerId);
     }
 
@@ -197,7 +200,7 @@ export class ScheduleService {
             return blockStartTimes;
         }
 
-        let time = this.getTimeInMinutes(container.defaultStartTime ?? '12:00');
+        let time = this.getTimeInMinutes(container.defaultStartTime || '12:00');
         for (const block of blocks) {
             blockStartTimes.set(block.blockId, this.formatTime(time));
             time += Math.floor((block.durationInSeconds ?? 0) / 60);

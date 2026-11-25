@@ -17,6 +17,9 @@ export class ScheduleContainer {
     @Column({ default: 'calculated' })
     timeMode: ScheduleContainerTimeMode;
 
+    @Column({ default: false })
+    showOnApplications: boolean;
+
     @Column({ nullable: true })
     defaultStartTime?: string;
 

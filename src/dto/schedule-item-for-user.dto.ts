@@ -18,6 +18,7 @@ export class ScheduleItemForUserDTO {
     subtitle?: string;
 
     order: number;
+    assignedSequenceNumber: number | null;
 
     liked: boolean;
 }

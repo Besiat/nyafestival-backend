@@ -11,6 +11,7 @@ export class ScheduleContainerDTO {
     showOnApplications: boolean;
     defaultStartTime?: string;
     order: number;
+    lastAssignedSequenceNumber: number | null;
     blocks: BlockForScheduleItemForUserDTO[];
 }
 

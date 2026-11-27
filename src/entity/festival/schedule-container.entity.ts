@@ -26,6 +26,10 @@ export class ScheduleContainer {
     @Column({ default: 0 })
     order: number;
 
+    // Null means numbering is not locked; otherwise retains the last issued number.
+    @Column({ type: 'integer', nullable: true })
+    lastAssignedSequenceNumber: number | null;
+
     @OneToMany(() => Block, block => block.scheduleContainer)
     blocks: Block[];
 }

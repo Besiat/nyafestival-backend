@@ -16,6 +16,18 @@ import { ScheduleContainer } from '../entity/festival/schedule-container.entity'
 export class ScheduleController {
     constructor(private readonly scheduleService: ScheduleService) {}
 
+    @Put('containers/:scheduleContainerId/lock-sequence-numbers')
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    async lockSequenceNumbers(@Param('scheduleContainerId') id: string): Promise<void> {
+        await this.scheduleService.setSequenceNumbersLocked(id, true);
+    }
+
+    @Put('containers/:scheduleContainerId/reset-sequence-numbers')
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    async resetSequenceNumbers(@Param('scheduleContainerId') id: string): Promise<void> {
+        await this.scheduleService.setSequenceNumbersLocked(id, false);
+    }
+
     @Post('create-schedule-item')
     @ApiOperation({ operationId: 'createScheduleItem', summary: 'Create a new schedule item' })
     @ApiResponse({ status: 201, description: 'Creates a new schedule item' })

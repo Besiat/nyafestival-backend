@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ScheduleItem } from '../entity/festival/schedule-item.entity';
 import { Application } from '../entity/festival/application.entity';
-import { MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { MoreThanOrEqual, Not, Repository, EntityManager } from 'typeorm';
 import { Block } from '../entity/festival/block.entity';
 import { BlockForScheduleItemForUserDTO } from '../dto/block-for-schedule-item-for-user.dto';
 import { StageVote } from '../entity/festival/stage-vote.entity';
@@ -25,7 +25,6 @@ export class ScheduleService {
         const block = await this.getBlockById(blockId);
         if (!block) throw new Error(`Block ${blockId} doesn't exist`);
         if (!applicationId && !title) throw new Error('Schedule item should have applicationId or title');
-        const maxOrder = await this.scheduleItemsRepository.maximum('order', { blockId });
         const newScheduleItem = this.scheduleItemsRepository.create();
 
         if (applicationId) {
@@ -47,8 +46,51 @@ export class ScheduleService {
 
         newScheduleItem.blockId = blockId;
         newScheduleItem.scheduleContainerId = block.scheduleContainerId;
-        newScheduleItem.order = typeof maxOrder === 'number' ? maxOrder + 1 : 0;
-        await this.scheduleItemsRepository.save(newScheduleItem);
+        await this.scheduleItemsRepository.manager.transaction(async manager => {
+            const container = await this.lockContainer(manager, block.scheduleContainerId);
+            const items = manager.getRepository(ScheduleItem);
+            const maxOrder = await items.maximum('order', { blockId });
+            newScheduleItem.order = typeof maxOrder === 'number' ? maxOrder + 1 : 0;
+            if (applicationId && await items.exists({ where: { applicationId, scheduleContainerId: block.scheduleContainerId } })) {
+                throw new BadRequestException('Application already exists in this container');
+            }
+            if (container.lastAssignedSequenceNumber != null) {
+                newScheduleItem.assignedSequenceNumber = ++container.lastAssignedSequenceNumber;
+                await manager.save(container);
+            }
+            await manager.save(newScheduleItem);
+        });
+    }
+
+    private async lockContainer(manager: EntityManager, scheduleContainerId: string): Promise<ScheduleContainer> {
+        const container = await manager.findOne(ScheduleContainer, {
+            where: { scheduleContainerId }, lock: { mode: 'pessimistic_write' },
+        });
+        if (!container) throw new BadRequestException('Schedule container does not exist');
+        return container;
+    }
+
+    async setSequenceNumbersLocked(scheduleContainerId: string, locked: boolean): Promise<void> {
+        await this.scheduleItemsRepository.manager.transaction(async manager => {
+            const container = await this.lockContainer(manager, scheduleContainerId);
+            if (container.timeMode !== 'calculated') throw new BadRequestException('Only calculated schedules can lock numbers');
+            if (locked) {
+                if (container.lastAssignedSequenceNumber != null) return;
+                const items = await manager.createQueryBuilder(ScheduleItem, 'item')
+                    .innerJoin('item.block', 'block')
+                    .where('item.scheduleContainerId = :scheduleContainerId', { scheduleContainerId })
+                    .orderBy('block.order', 'ASC').addOrderBy('block.blockId', 'ASC').addOrderBy('item.order', 'ASC')
+                    .addOrderBy('item.scheduleItemId', 'ASC').getMany();
+                for (const [index, item] of items.entries()) {
+                    await manager.update(ScheduleItem, item.scheduleItemId, { assignedSequenceNumber: index + 1 });
+                }
+                container.lastAssignedSequenceNumber = items.length;
+            } else {
+                await manager.update(ScheduleItem, { scheduleContainerId }, { assignedSequenceNumber: null });
+                container.lastAssignedSequenceNumber = null;
+            }
+            await manager.save(container);
+        });
     }
 
     async deleteScheduleItem(scheduleItemId: string): Promise<void> {
@@ -67,7 +109,9 @@ export class ScheduleService {
             .leftJoinAndSelect('blocks.scheduleItems', 'scheduleItems')
             .orderBy('container.order')
             .addOrderBy('blocks.order')
-            .addOrderBy('scheduleItems.order');
+            .addOrderBy('blocks.blockId')
+            .addOrderBy('scheduleItems.order')
+            .addOrderBy('scheduleItems.scheduleItemId');
 
         if (codes?.length) {
             query.where('container.code IN (:...codes)', { codes });
@@ -83,6 +127,7 @@ export class ScheduleService {
                 showOnApplications: container.showOnApplications,
                 defaultStartTime: container.defaultStartTime,
                 order: container.order,
+                lastAssignedSequenceNumber: container.lastAssignedSequenceNumber,
                 blocks: await this.mapBlocksToDTOs(container.blocks ?? [], userId),
             })),
         );
@@ -156,19 +201,24 @@ export class ScheduleService {
 
     async createScheduleContainer(data: UpsertScheduleContainerDTO): Promise<void> {
         const container = this.scheduleContainerRepository.create(data);
+        container.lastAssignedSequenceNumber = null;
         await this.scheduleContainerRepository.save(container);
     }
 
     async updateScheduleContainer(scheduleContainerId: string, data: UpsertScheduleContainerDTO): Promise<void> {
-        const container = await this.scheduleContainerRepository.findOne({ where: { scheduleContainerId } });
-        if (!container) throw new Error(`Schedule container ${scheduleContainerId} doesn't exist`);
-        container.code = data.code;
-        container.name = data.name;
-        container.timeMode = data.timeMode;
-        container.showOnApplications = data.showOnApplications ?? container.showOnApplications;
-        container.defaultStartTime = data.defaultStartTime ?? '';
-        container.order = data.order;
-        await this.scheduleContainerRepository.save(container);
+        await this.scheduleContainerRepository.manager.transaction(async manager => {
+            const container = await this.lockContainer(manager, scheduleContainerId);
+            if (container.lastAssignedSequenceNumber != null && data.timeMode !== 'calculated') {
+                throw new BadRequestException('Reset sequence numbers before changing time mode');
+            }
+            container.code = data.code;
+            container.name = data.name;
+            container.timeMode = data.timeMode;
+            container.showOnApplications = data.showOnApplications ?? container.showOnApplications;
+            container.defaultStartTime = data.defaultStartTime ?? '';
+            container.order = data.order;
+            await manager.save(container);
+        });
     }
 
     async deleteScheduleContainer(scheduleContainerId: string): Promise<void> {
@@ -184,7 +234,9 @@ export class ScheduleService {
             .leftJoin('block.scheduleContainer', 'container')
             .where('container.code = :code', { code })
             .orderBy('block.order')
+            .addOrderBy('block.blockId')
             .addOrderBy('scheduleItems.order')
+            .addOrderBy('scheduleItems.scheduleItemId')
             .getMany();
     }
 
@@ -267,6 +319,7 @@ export class ScheduleService {
                 scheduleItemDTO.title = scheduleItem.title;
                 scheduleItemDTO.subtitle = scheduleItem.subtitle;
                 scheduleItemDTO.order = scheduleItem.order;
+                scheduleItemDTO.assignedSequenceNumber = scheduleItem.assignedSequenceNumber;
                 scheduleItemDTO.scheduleItemId = scheduleItem.scheduleItemId;
                 if (userId && scheduleItem.applicationId) {
                     scheduleItemDTO.liked =
@@ -287,10 +340,14 @@ export class ScheduleService {
         if (!scheduleItem) throw new Error(`Schedule item ${scheduleItem} doesn't exist`);
         const block = await this.getBlockById(blockId);
         if (!block) throw new Error(`Block ${blockId} doesn't exist`);
+        if (scheduleItem.scheduleContainerId !== block.scheduleContainerId) {
+            throw new BadRequestException('Move items only within the same schedule container');
+        }
+        if (scheduleItem.blockId === blockId) return;
         scheduleItem.blockId = blockId;
         scheduleItem.scheduleContainerId = block.scheduleContainerId;
         scheduleItem.order = typeof maxOrder === 'number' ? maxOrder + 1 : 0;
-        await this.scheduleItemsRepository.save(scheduleItem);
+        await this.scheduleItemsRepository.update(scheduleItemId, { blockId, order: scheduleItem.order });
     }
 
     async createBlock(
@@ -352,6 +409,9 @@ export class ScheduleService {
         }
 
         const container = await this.getScheduleContainerForBlock(scheduleContainerId ?? block.scheduleContainerId);
+        if (container.scheduleContainerId !== block.scheduleContainerId && await this.scheduleItemsRepository.count({ where: { blockId } })) {
+            throw new BadRequestException('Cannot move a block containing schedule items to another container');
+        }
         this.validateBlockTimes(container, durationInSeconds, startTime, endTime);
         block.name = name;
         block.nominationId = nominationId ?? block.nominationId;
@@ -464,6 +524,10 @@ export class ScheduleService {
         });
 
         scheduleItem.order = newOrder;
-        await this.scheduleItemsRepository.save([...otherScheduleItems, scheduleItem]);
+        await this.scheduleItemsRepository.manager.transaction(async manager => {
+            for (const item of [...otherScheduleItems, scheduleItem]) {
+                await manager.update(ScheduleItem, item.scheduleItemId, { order: item.order });
+            }
+        });
     }
 }

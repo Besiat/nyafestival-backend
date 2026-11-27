@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from "typeorm";
 import { Block } from "./block.entity";
 
 @Entity()
+@Index('schedule_item_assigned_sequence_unique', ['scheduleContainerId', 'assignedSequenceNumber'], { unique: true })
 export class ScheduleItem {
     @PrimaryGeneratedColumn('uuid')
     scheduleItemId: string;
@@ -30,4 +31,7 @@ export class ScheduleItem {
 
     @Column()
     order: number;
+
+    @Column({ type: 'integer', nullable: true })
+    assignedSequenceNumber: number | null;
 }
